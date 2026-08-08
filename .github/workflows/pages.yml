@@ -1,0 +1,34 @@
+# Publishes the repo root as-is. Needed when Settings -> Pages -> Source is set
+# to "GitHub Actions" rather than "Deploy from a branch"; under that source
+# nothing is served until a workflow uploads an artifact, so the site 404s
+# forever with Pages otherwise correctly enabled.
+name: Deploy to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

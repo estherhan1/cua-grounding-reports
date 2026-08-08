@@ -1,8 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
 <title>ScreenSpot-Pro: tools vs no-tools, every example</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 :root{--bg:#f7f7f8;--fg:#18181b;--mut:#71717a;--line:#e4e4e7;--card:#fff;--acc:#2563eb}
-:root:not([data-theme=light]) @media (prefers-color-scheme:dark){}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#18181b;--fg:#f4f4f5;
   --mut:#a1a1aa;--line:#3f3f46;--card:#27272a;--acc:#60a5fa}}
 :root[data-theme=dark]{--bg:#18181b;--fg:#f4f4f5;--mut:#a1a1aa;--line:#3f3f46;--card:#27272a;--acc:#60a5fa}
@@ -29,7 +30,7 @@ a{color:var(--acc)}
 .note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);
   border-radius:6px;padding:.9rem 1.1rem;margin:1rem 0;font-size:14px}
 code{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:.1em .35em;font-size:.9em}
-</style>
+</style></head><body>
 <main>
 <h1>ScreenSpot-Pro: does giving a GUI-grounding agent tools help?</h1>
 <p class="sub">Qwen3-VL-8B-Instruct on all 1581 ScreenSpot-Pro examples.
@@ -82,4 +83,4 @@ or an application name to filter.</p>
 <p class="sub">All 133 of the fixes were faithful transcriptions too. The crop-frame
 bug is a known, unfixed harness defect and is reported separately rather than
 folded into the headline.</p>
-</main>
+</main></body></html>
