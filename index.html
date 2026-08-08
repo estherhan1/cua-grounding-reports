@@ -16,7 +16,9 @@ h1{font-size:1.6rem;margin:0 0 .3rem}h2{font-size:1.1rem;margin:2.4rem 0 .8rem;
 .sub{color:var(--mut);margin:0 0 2rem}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 1rem}
 table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
-th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);white-space:nowrap}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);white-space:nowrap;
+  vertical-align:top}
+td.wrap{white-space:normal;min-width:22rem;color:var(--mut);font-size:13px}
 th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
 td.num{text-align:right;font-variant-numeric:tabular-nums}
 tr.hl td{font-weight:600}
@@ -48,19 +50,28 @@ has looked at the screenshot, so the rewrites it produces are guesswork.</div>
 
 <h2>Accuracy by configuration</h2>
 <div class="scroll"><table>
-<tr><th>run</th><th>strict accuracy</th><th>hits</th><th></th></tr>
-<tr><td>BASELINE dataset prompt</td><td class='num'>54.71%</td><td class='num'>865/1581</td><td></td></tr>
-<tr><td>ARM_B v1 old core</td><td class='num'>50.92%</td><td class='num'>805/1581</td><td></td></tr>
-<tr><td>ARM_A v2 old core+tools</td><td class='num'>50.97%</td><td class='num'>706/1385</td><td> &nbsp;<span style='color:var(--mut)'>partial: 1385/1581 run</span></td></tr>
-<tr class='hl'><td>ARM_B v2 NEW core</td><td class='num'>54.40%</td><td class='num'>860/1581</td><td></td></tr>
-<tr class='hl'><td>ARM_A v3 NEW core+tools</td><td class='num'>49.59%</td><td class='num'>784/1581</td><td></td></tr>
-<tr><td>GTA1 alone raw instr</td><td class='num'>49.72%</td><td class='num'>786/1581</td><td></td></tr>
+<tr><th>run</th><th>what it actually is</th><th>strict acc.</th><th>hits</th></tr>
+<tr><td>BASELINE dataset prompt</td><td class='wrap'>BaseAgent, no tools. The dataset's own one-line system prompt (screenspot_pro.py SYSTEM_PROMPT); says nothing about a 0-1000 scale.</td><td class='num'>54.71%</td><td class='num'>865/1581</td></tr>
+<tr><td>ARM_B v1 old core</td><td class='wrap'>GroundingNoToolsAgent, no tools. OLD TASK_CORE. Kept only to show the format artifact: 90/1581 strict-unparseable, and under a lenient parser it is indistinguishable from ARM_B v2.</td><td class='num'>50.92%</td><td class='num'>805/1581</td></tr>
+<tr><td>ARM_A v2 old core+tools<br><span style='color:var(--mut)'>partial run</span></td><td class='wrap'>GroundingToolsAgent, 10 tools. OLD TASK_CORE + tool directory. Killed at 1385/1581; scored over what it ran, never a headline claim.</td><td class='num'>50.97%</td><td class='num'>706/1385</td></tr>
+<tr class='hl'><td>ARM_B v2 NEW core</td><td class='wrap'>GroundingNoToolsAgent, no tools. NEW TASK_CORE (grounding_no_tools_v2). CONTROLLED PAIR: identical prompt core to ARM_A v3, tools OFF. Drawn BLUE.</td><td class='num'>54.40%</td><td class='num'>860/1581</td></tr>
+<tr class='hl'><td>ARM_A v3 NEW core+tools</td><td class='wrap'>GroundingToolsAgent, 10 tools. NEW TASK_CORE + tool directory (grounding_tools_v3). CONTROLLED PAIR: tools ON. Drawn RED; the card badge is this run's outcome.</td><td class='num'>49.59%</td><td class='num'>784/1581</td></tr>
+<tr><td>GTA1 alone raw instr</td><td class='wrap'>GTA1-7B directly, no agent and no system prompt at all -- the raw instruction. This is what the tool arm delegates to.</td><td class='num'>49.72%</td><td class='num'>786/1581</td></tr>
 </table></div>
 <p class="sub" style="margin:0">Strict parser = the dataset's own
 <code>x=([\d.]+), y=([\d.]+)</code>. The two bolded rows are the controlled pair:
-identical prompt core, tools on vs off.</p>
+identical prompt core, tools on vs off. Everything else is context.</p>
 
 <h2>Browse every example</h2>
+<div class="note"><b>Reading the screenshots.</b> Only two of the six runs are
+drawn on the image &mdash; six points on one screenshot is unreadable.
+<b style="color:#22c55e">Green box</b> = ground truth (targets smaller than 1/25
+of the frame also get a green locator ring, because a 20px icon on a 4K
+screenshot vanishes when the image is downscaled).
+<b style="color:#dc2626">Red cross</b> = ARM_A v3, tools on.
+<b style="color:#2563eb">Blue cross</b> = ARM_B v2, tools off.
+The other four runs appear as text under each image. The card's correct/wrong
+badge is the <b>red</b> run's outcome.</div>
 <div class="cards"><a class='card' href='development.html'><b>Development</b><span>299 examples &middot; 27 MB<br>tools 42.81% &nbsp;vs&nbsp; no-tools 50.17% (-22 rows)</span></a>
 <a class='card' href='creative.html'><b>Creative</b><span>341 examples &middot; 24 MB<br>tools 42.52% &nbsp;vs&nbsp; no-tools 48.39% (-20 rows)</span></a>
 <a class='card' href='cad.html'><b>CAD</b><span>261 examples &middot; 16 MB<br>tools 49.04% &nbsp;vs&nbsp; no-tools 49.81% (-2 rows)</span></a>
