@@ -1,0 +1,85 @@
+<title>ScreenSpot-Pro: tools vs no-tools, every example</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#f7f7f8;--fg:#18181b;--mut:#71717a;--line:#e4e4e7;--card:#fff;--acc:#2563eb}
+:root:not([data-theme=light]) @media (prefers-color-scheme:dark){}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#18181b;--fg:#f4f4f5;
+  --mut:#a1a1aa;--line:#3f3f46;--card:#27272a;--acc:#60a5fa}}
+:root[data-theme=dark]{--bg:#18181b;--fg:#f4f4f5;--mut:#a1a1aa;--line:#3f3f46;--card:#27272a;--acc:#60a5fa}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);margin:0;padding:2rem 1rem 4rem;
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}
+main{max-width:960px;margin:0 auto}
+h1{font-size:1.6rem;margin:0 0 .3rem}h2{font-size:1.1rem;margin:2.4rem 0 .8rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--line)}
+.sub{color:var(--mut);margin:0 0 2rem}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 1rem}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.hl td{font-weight:600}
+a{color:var(--acc)}
+.cards{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem;
+  text-decoration:none;color:inherit;display:block}
+.card:hover{border-color:var(--acc)}
+.card b{display:block;font-size:1.05rem;margin-bottom:.35rem}
+.card span{color:var(--mut);font-size:13px}
+.note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);
+  border-radius:6px;padding:.9rem 1.1rem;margin:1rem 0;font-size:14px}
+code{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:.1em .35em;font-size:.9em}
+</style>
+<main>
+<h1>ScreenSpot-Pro: does giving a GUI-grounding agent tools help?</h1>
+<p class="sub">Qwen3-VL-8B-Instruct on all 1581 ScreenSpot-Pro examples.
+Every example is shown with the ground-truth box, both arms' predicted clicks,
+all 6 runs' raw outputs, and the tool agent's full trajectory.</p>
+
+<div class="note"><b>Headline.</b> Giving the agent a 10-tool kit costs
+<b>76 net rows</b> (133 fixed, 209 broken; McNemar &chi;&sup2;=16.4,
+<b>p=5.0e-05</b>). Decomposing that loss: <b>&minus;74 of it is the handoff itself</b>
+&mdash; the agent delegates to GTA1-7B, a weaker grounder than the base model it
+replaces. Everything the tool loop <i>adds</i> on top of that handoff &mdash; multi-call
+reasoning, an instruction-rewriting stage, an 8152-character tool policy &mdash; is
+worth <b>net &minus;2 rows, p=0.95</b>. 98% of GTA1 calls are issued before the agent
+has looked at the screenshot, so the rewrites it produces are guesswork.</div>
+
+<h2>Accuracy by configuration</h2>
+<div class="scroll"><table>
+<tr><th>run</th><th>strict accuracy</th><th>hits</th><th></th></tr>
+<tr><td>BASELINE dataset prompt</td><td class='num'>54.71%</td><td class='num'>865/1581</td><td></td></tr>
+<tr><td>ARM_B v1 old core</td><td class='num'>50.92%</td><td class='num'>805/1581</td><td></td></tr>
+<tr><td>ARM_A v2 old core+tools</td><td class='num'>50.97%</td><td class='num'>706/1385</td><td> &nbsp;<span style='color:var(--mut)'>partial: 1385/1581 run</span></td></tr>
+<tr class='hl'><td>ARM_B v2 NEW core</td><td class='num'>54.40%</td><td class='num'>860/1581</td><td></td></tr>
+<tr class='hl'><td>ARM_A v3 NEW core+tools</td><td class='num'>49.59%</td><td class='num'>784/1581</td><td></td></tr>
+<tr><td>GTA1 alone raw instr</td><td class='num'>49.72%</td><td class='num'>786/1581</td><td></td></tr>
+</table></div>
+<p class="sub" style="margin:0">Strict parser = the dataset's own
+<code>x=([\d.]+), y=([\d.]+)</code>. The two bolded rows are the controlled pair:
+identical prompt core, tools on vs off.</p>
+
+<h2>Browse every example</h2>
+<div class="cards"><a class='card' href='development.html'><b>Development</b><span>299 examples &middot; 27 MB<br>tools 42.81% &nbsp;vs&nbsp; no-tools 50.17% (-22 rows)</span></a>
+<a class='card' href='creative.html'><b>Creative</b><span>341 examples &middot; 24 MB<br>tools 42.52% &nbsp;vs&nbsp; no-tools 48.39% (-20 rows)</span></a>
+<a class='card' href='cad.html'><b>CAD</b><span>261 examples &middot; 16 MB<br>tools 49.04% &nbsp;vs&nbsp; no-tools 49.81% (-2 rows)</span></a>
+<a class='card' href='scientific.html'><b>Scientific</b><span>254 examples &middot; 17 MB<br>tools 53.54% &nbsp;vs&nbsp; no-tools 57.48% (-10 rows)</span></a>
+<a class='card' href='office.html'><b>Office</b><span>230 examples &middot; 22 MB<br>tools 76.09% &nbsp;vs&nbsp; no-tools 72.17% (+9 rows)</span></a>
+<a class='card' href='os.html'><b>OS</b><span>196 examples &middot; 15 MB<br>tools 36.73% &nbsp;vs&nbsp; no-tools 52.55% (-31 rows)</span></a></div>
+<p class="sub" style="margin-top:1rem">Inside each page: the badge is the tool arm's
+outcome, so the All/Correct/Wrong filter reads as &ldquo;did tools get this right&rdquo;.
+Search <code>broken_by_tools</code>, <code>fixed_by_tools</code>, <code>crop-frame</code>,
+or an application name to filter.</p>
+
+<h2>What the 209 regressions actually were</h2>
+<div class="scroll"><table>
+<tr><th>cause</th><th>count</th><th>share</th></tr>
+<tr><td>faithful full-image transcription &mdash; the agent relayed GTA1's answer correctly, GTA1 was just wrong</td><td class="num">182</td><td class="num">87.1%</td></tr>
+<tr><td>crop-frame bug &mdash; agent zoomed, re-grounded inside the crop, reported the crop's coordinates</td><td class="num">18</td><td class="num">8.6%</td></tr>
+<tr><td>self-authored point &mdash; agent ignored the grounder and answered itself</td><td class="num">4</td><td class="num">1.9%</td></tr>
+<tr><td>other</td><td class="num">5</td><td class="num">2.4%</td></tr>
+</table></div>
+<p class="sub">All 133 of the fixes were faithful transcriptions too. The crop-frame
+bug is a known, unfixed harness defect and is reported separately rather than
+folded into the headline.</p>
+</main>
