@@ -37,7 +37,7 @@ code{background:var(--card);border:1px solid var(--line);border-radius:4px;paddi
 <h1>ScreenSpot-Pro: does giving a GUI-grounding agent tools help?</h1>
 <p class="sub">Qwen3-VL-8B-Instruct on all 1581 ScreenSpot-Pro examples.
 Every example is shown with the ground-truth box, both arms' predicted clicks,
-all 6 runs' raw outputs, and the tool agent's full trajectory.</p>
+all 4 runs' raw outputs, and the tool agent's full trajectory.</p>
 
 <div class="note"><b>Headline.</b> Giving the agent a 10-tool kit costs
 <b>76 net rows</b> (133 fixed, 209 broken; McNemar &chi;&sup2;=16.4,
@@ -52,8 +52,6 @@ has looked at the screenshot, so the rewrites it produces are guesswork.</div>
 <div class="scroll"><table>
 <tr><th>run</th><th>what it actually is</th><th>strict acc.</th><th>hits</th></tr>
 <tr><td>BASELINE dataset prompt</td><td class='wrap'>BaseAgent, no tools. The dataset's own one-line system prompt (screenspot_pro.py SYSTEM_PROMPT); says nothing about a 0-1000 scale.</td><td class='num'>54.71%</td><td class='num'>865/1581</td></tr>
-<tr><td>ARM_B v1 old core</td><td class='wrap'>GroundingNoToolsAgent, no tools. OLD TASK_CORE. Kept only to show the format artifact: 90/1581 strict-unparseable, and under a lenient parser it is indistinguishable from ARM_B v2.</td><td class='num'>50.92%</td><td class='num'>805/1581</td></tr>
-<tr><td>ARM_A v2 old core+tools<br><span style='color:var(--mut)'>partial run</span></td><td class='wrap'>GroundingToolsAgent, 10 tools. OLD TASK_CORE + tool directory. Killed at 1385/1581; scored over what it ran, never a headline claim.</td><td class='num'>50.97%</td><td class='num'>706/1385</td></tr>
 <tr class='hl'><td>ARM_B v2 NEW core</td><td class='wrap'>GroundingNoToolsAgent, no tools. NEW TASK_CORE (grounding_no_tools_v2). CONTROLLED PAIR: identical prompt core to ARM_A v3, tools OFF. Drawn BLUE.</td><td class='num'>54.40%</td><td class='num'>860/1581</td></tr>
 <tr class='hl'><td>ARM_A v3 NEW core+tools</td><td class='wrap'>GroundingToolsAgent, 10 tools. NEW TASK_CORE + tool directory (grounding_tools_v3). CONTROLLED PAIR: tools ON. Drawn RED; the card badge is this run's outcome.</td><td class='num'>49.59%</td><td class='num'>784/1581</td></tr>
 <tr><td>GTA1 alone raw instr</td><td class='wrap'>GTA1-7B directly, no agent and no system prompt at all -- the raw instruction. This is what the tool arm delegates to.</td><td class='num'>49.72%</td><td class='num'>786/1581</td></tr>
@@ -61,6 +59,44 @@ has looked at the screenshot, so the rewrites it produces are guesswork.</div>
 <p class="sub" style="margin:0">Strict parser = the dataset's own
 <code>x=([\d.]+), y=([\d.]+)</code>. The two bolded rows are the controlled pair:
 identical prompt core, tools on vs off. Everything else is context.</p>
+
+<h2>Which tools did the agent actually use?</h2>
+<p class="sub" style="margin:0 0 1rem">The tool arm had a 10-tool kit available.
+Over 1581 examples it made <b>1763 calls</b>
+(1.12 per example); <b>every single example called at least
+one tool</b>, so nothing here is explained by the agent declining to use them.</p>
+<div class="scroll"><table>
+<tr><th>tool</th><th>calls</th><th>share of calls</th><th>examples</th><th>share of examples</th></tr>
+<tr><td><code>GTA1_Grounding_Tool</code></td><td class='num'>1663</td><td class='num'>94.3%</td><td class='num'>1579</td><td class='num'>99.9%</td></tr>
+<tr><td><code>Zoom_In_Tool</code></td><td class='num'>64</td><td class='num'>3.6%</td><td class='num'>63</td><td class='num'>4.0%</td></tr>
+<tr><td><code>GroundingDINO_Tool</code></td><td class='num'>16</td><td class='num'>0.9%</td><td class='num'>16</td><td class='num'>1.0%</td></tr>
+<tr><td><code>OCR_Tool</code></td><td class='num'>10</td><td class='num'>0.6%</td><td class='num'>10</td><td class='num'>0.6%</td></tr>
+<tr><td><code>Python_Executor_Tool</code></td><td class='num'>6</td><td class='num'>0.3%</td><td class='num'>6</td><td class='num'>0.4%</td></tr>
+<tr><td><code>Text_Search_Tool</code></td><td class='num'>3</td><td class='num'>0.2%</td><td class='num'>3</td><td class='num'>0.2%</td></tr>
+<tr><td><code>Python_Coding_Agent_Tool</code></td><td class='num'>1</td><td class='num'>0.1%</td><td class='num'>1</td><td class='num'>0.1%</td></tr>
+</table></div>
+<div class="note">Almost the whole kit went unused. <b>94.3% of
+all calls were to the one grounding specialist</b>, and 95.3% of examples called
+<i>only</i> that. So &ldquo;giving the agent tools&rdquo; was in practice
+&ldquo;routing grounding to GTA1&rdquo; &mdash; which is exactly why the loss
+decomposes into &minus;74 for the handoff and &minus;2 for everything else.</div>
+
+<h2>Making grounding better &mdash; a different question</h2>
+<p class="sub" style="margin:0 0 1rem">These runs are not agents and their
+baseline is <b>GTA1 at 49.72%</b>, not Qwen3-VL. They ask how to improve
+grounding rather than whether tool access helps, and they share the GTA1 anchor
+with the table above. Full progression: GTA1 49.72 &rarr; Qwen3-VL 54.40 &rarr;
+verify-choose 57.31 &rarr; zoom-reground 58.70 &rarr; composed 61.54 &rarr;
+ZQ 66.16 &rarr; <b>vote 68.12</b>.</p>
+<div class="scroll"><table>
+<tr><th>run</th><th>what it is</th><th>strict acc.</th><th>hits</th></tr>
+<tr><td>Zoom-reground (GTA1)</td><td class='wrap'>Not an agent. GTA1 grounds once, then re-grounds inside a 2.5x crop centred on its own coarse prediction. Largest single lever (+8.98pp over GTA1). Hit/miss only -- coordinates were not saved, so not drawn.</td><td class='num'>58.70%</td><td class='num'>928/1581</td></tr>
+<tr><td>Zoom-reground x verify-choose</td><td class='wrap'>Verify-choose between the zoom-reground stream and Qwen3-VL, picking by crop recognition. Hit/miss only -- not drawn.</td><td class='num'>61.54%</td><td class='num'>973/1581</td></tr>
+<tr class='hl'><td>6-stream consensus vote</td><td class='wrap'>Project champion. Six candidate points from cheap geometric variants of the same two models; a pure-code greedy 15px clustering picks the most-agreed location. No verifier, no model call in the vote itself. Drawn ORANGE.</td><td class='num'>68.12%</td><td class='num'>1077/1581</td></tr>
+</table></div>
+<p class="sub" style="margin:0">Only the consensus vote saved per-example
+coordinates, so it is the only one of the three drawn on the screenshots; the
+other two appear as hit/miss.</p>
 
 <h2>Browse every example</h2>
 <div class="note"><b>Reading the screenshots.</b> Only two of the six runs are
@@ -70,13 +106,14 @@ of the frame also get a green locator ring, because a 20px icon on a 4K
 screenshot vanishes when the image is downscaled).
 <b style="color:#dc2626">Red cross</b> = ARM_A v3, tools on.
 <b style="color:#2563eb">Blue cross</b> = ARM_B v2, tools off.
-The other four runs appear as text under each image. The card's correct/wrong
+<b style="color:#ea580c">Orange cross</b> = the 6-stream consensus vote.
+The remaining runs appear as text under each image. The card's correct/wrong
 badge is the <b>red</b> run's outcome.</div>
 <div class="cards"><a class='card' href='development.html'><b>Development</b><span>299 examples &middot; 27 MB<br>tools 42.81% &nbsp;vs&nbsp; no-tools 50.17% (-22 rows)</span></a>
 <a class='card' href='creative.html'><b>Creative</b><span>341 examples &middot; 24 MB<br>tools 42.52% &nbsp;vs&nbsp; no-tools 48.39% (-20 rows)</span></a>
 <a class='card' href='cad.html'><b>CAD</b><span>261 examples &middot; 16 MB<br>tools 49.04% &nbsp;vs&nbsp; no-tools 49.81% (-2 rows)</span></a>
 <a class='card' href='scientific.html'><b>Scientific</b><span>254 examples &middot; 17 MB<br>tools 53.54% &nbsp;vs&nbsp; no-tools 57.48% (-10 rows)</span></a>
-<a class='card' href='office.html'><b>Office</b><span>230 examples &middot; 22 MB<br>tools 76.09% &nbsp;vs&nbsp; no-tools 72.17% (+9 rows)</span></a>
+<a class='card' href='office.html'><b>Office</b><span>230 examples &middot; 23 MB<br>tools 76.09% &nbsp;vs&nbsp; no-tools 72.17% (+9 rows)</span></a>
 <a class='card' href='os.html'><b>OS</b><span>196 examples &middot; 15 MB<br>tools 36.73% &nbsp;vs&nbsp; no-tools 52.55% (-31 rows)</span></a></div>
 <p class="sub" style="margin-top:1rem">Inside each page: the badge is the tool arm's
 outcome, so the All/Correct/Wrong filter reads as &ldquo;did tools get this right&rdquo;.
