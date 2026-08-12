@@ -85,18 +85,16 @@ decomposes into &minus;74 for the handoff and &minus;2 for everything else.</div
 <p class="sub" style="margin:0 0 1rem">These runs are not agents and their
 baseline is <b>GTA1 at 49.72%</b>, not Qwen3-VL. They ask how to improve
 grounding rather than whether tool access helps, and they share the GTA1 anchor
-with the table above. Full progression: GTA1 49.72 &rarr; Qwen3-VL 54.40 &rarr;
-verify-choose 57.31 &rarr; zoom-reground 58.70 &rarr; composed 61.54 &rarr;
-ZQ 66.16 &rarr; <b>vote 68.12</b>.</p>
+with the table above. Progression: GTA1 49.72 &rarr; Qwen3-VL 54.40 &rarr;
+zoom-reground 58.70 &rarr; composed 61.54 &rarr; <b>ZQ 66.16</b>.</p>
 <div class="scroll"><table>
 <tr><th>run</th><th>what it is</th><th>strict acc.</th><th>hits</th></tr>
 <tr><td>Zoom-reground (GTA1)</td><td class='wrap'>Not an agent. GTA1 grounds once, then re-grounds inside a 2.5x crop centred on its own coarse prediction. Largest single lever (+8.98pp over GTA1). Hit/miss only -- coordinates were not saved, so not drawn.</td><td class='num'>58.70%</td><td class='num'>928/1581</td></tr>
 <tr><td>Zoom-reground x verify-choose</td><td class='wrap'>Verify-choose between the zoom-reground stream and Qwen3-VL, picking by crop recognition. Hit/miss only -- not drawn.</td><td class='num'>61.54%</td><td class='num'>973/1581</td></tr>
-<tr class='hl'><td>6-stream consensus vote</td><td class='wrap'>Project champion. Six candidate points from cheap geometric variants of the same two models; a pure-code greedy 15px clustering picks the most-agreed location. No verifier, no model call in the vote itself. Drawn ORANGE.</td><td class='num'>68.12%</td><td class='num'>1077/1581</td></tr>
+<tr class='hl'><td>ZQ (Qwen anchors, GTA1 refines)</td><td class='wrap'>Division of labour: Qwen3-VL picks the region, then GTA1 re-grounds inside a crop of it. Qwen is better at WHICH REGION, GTA1 at WHICH PIXEL; each does only what it is good at. Best single configuration.</td><td class='num'>66.16%</td><td class='num'>1046/1581</td></tr>
 </table></div>
-<p class="sub" style="margin:0">Only the consensus vote saved per-example
-coordinates, so it is the only one of the three drawn on the screenshots; the
-other two appear as hit/miss.</p>
+<p class="sub" style="margin:0">Neither saved per-example coordinates, so both
+appear as hit/miss on the cards rather than being drawn on the screenshots.</p>
 
 <h2>Browse every example</h2>
 <div class="note"><b>Reading the screenshots.</b> Only two of the six runs are
@@ -106,7 +104,6 @@ of the frame also get a green locator ring, because a 20px icon on a 4K
 screenshot vanishes when the image is downscaled).
 <b style="color:#dc2626">Red cross</b> = ARM_A v3, tools on.
 <b style="color:#2563eb">Blue cross</b> = ARM_B v2, tools off.
-<b style="color:#ea580c">Orange cross</b> = the 6-stream consensus vote.
 The remaining runs appear as text under each image. The card's correct/wrong
 badge is the <b>red</b> run's outcome.</div>
 <div class="cards"><a class='card' href='development.html'><b>Development</b><span>299 examples &middot; 27 MB<br>tools 42.81% &nbsp;vs&nbsp; no-tools 50.17% (-22 rows)</span></a>
