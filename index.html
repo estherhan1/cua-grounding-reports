@@ -96,6 +96,37 @@ zoom-reground 58.70 &rarr; composed 61.54 &rarr; <b>ZQ 66.16</b>.</p>
 <p class="sub" style="margin:0">Neither saved per-example coordinates, so both
 appear as hit/miss on the cards rather than being drawn on the screenshots.</p>
 
+<h2>Why the search-tool line was closed</h2>
+<p class="sub" style="margin:0 0 1rem">A separate experiment, and the one negative
+result worth reading in full: letting the instruction-refiner search the web before
+rewriting. Both arms rewrite and hand the grounder
+<code>"{original} ({rewrite})"</code>; they differ only in whether the refiner may
+call search. Baseline here is the <b>plain-rewrite arm at 51.80%</b>, not raw GTA1
+&mdash; scoring against GTA1 would credit search with the plain rewrite's gain.</p>
+<div class="scroll"><table>
+<tr><th>run</th><th>plain rewrite</th><th>+ search</th><th>fixed</th><th>broke</th><th>net</th><th>McNemar p</th></tr>
+<tr><td>original saved run</td><td class='num'>51.80%</td><td class='num'>49.78%</td><td class='num'>59</td><td class='num'>91</td><td class='num'>-32</td><td class='num'>0.011</td></tr>
+<tr><td>independent re-run (logs tool responses)</td><td class='num'>51.80%</td><td class='num'>50.60%</td><td class='num'>67</td><td class='num'>86</td><td class='num'>-19</td><td class='num'>0.146</td></tr>
+</table></div>
+<p class="sub" style="margin:0 0 1rem">Cite this as <b>consistently negative in
+direction across runs, significant in the original full-pool run</b> &mdash; not as
+&ldquo;replicated at p&lt;0.05&rdquo;, because the cleanest re-run is p=0.15. The
+re-run loses less because it removes two damage sources the original had (untagged
+text reaching the grounder, and second-tool escalation).</p>
+<div class="note"><b>What the report overturns.</b> The recorded explanation was
+&ldquo;web knowledge overrides correct screenshot perception&rdquo;. It fails its own
+paired control: the <b>plain</b> arm invents UI labels <b>more</b> often than the
+search arm (40.0% vs 32.6%), so the largest failure category is a property of the
+rewriter, not of search. What search actually adds is <b>churn</b> &mdash; it doubles
+the flip rate (16.3% vs 6.4%, p&lt;0.0001) without shifting which way rows flip
+(p=0.41). And the entire loss sits on <b>small targets</b>: break rate 34.0% on
+sub-40px targets, falling to ~5% above 120px; icon &minus;2.81pp vs text &minus;0.20pp.</div>
+<div class="cards"><a class='card' href='search-failure.html'><b>Search failure report</b><span>233 examples &middot; 16 MB<br>plain 51.80% &nbsp;vs&nbsp; + search 50.60% (-19 rows)</span></a></div>
+<p class="sub" style="margin-top:1rem">Every flipped example plus a sample of
+unflipped ones, each with both arms' rewrites, both clicks drawn, and the
+<b>complete search query and response</b> &mdash; the tool output the original run
+never saved. The full skeptic-corrected failure taxonomy is embedded at the bottom.</p>
+
 <h2>Browse every example</h2>
 <div class="note"><b>Reading the screenshots.</b> Only two of the six runs are
 drawn on the image &mdash; six points on one screenshot is unreadable.
