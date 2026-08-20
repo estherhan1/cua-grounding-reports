@@ -70,3 +70,36 @@ as "did tools get this right". Search `broken_by_tools`, `fixed_by_tools`,
 Pages are single self-contained HTML files with screenshots embedded as JPEG
 data URIs (re-encoded to 1000px / q55 to fit under GitHub's 100 MB blob limit;
 a higher-quality single-file build exists locally).
+
+
+---
+
+## Also here: WebArena-812 (a different benchmark)
+
+`webarena-a3.html` + [`REPORT.md`](REPORT.md) are a separate line of work, kept in
+this repo because they share the harness. **A3-Qwen3.5-9B** run on all 812 WebArena
+tasks against a self-hosted site stack: **45.44% (369/812), ±3.42pp**, against the
+leaderboard's **42.1** for the same model on the same split. Inside the interval, so
+**reproduced, not beaten**.
+
+Nothing on that page is comparable to the ScreenSpot-Pro numbers above — it measures
+task completion, not pointing accuracy.
+
+Three splits the aggregate hides:
+
+- **Cross-site 20.8% (10/48) vs single-site 47.4%.** gitlab+reddit is 1/18. Composing
+  across two apps is the failure mode, not any individual site.
+- **The 36 unachievable (`N/A`) tasks score 86.1%; the 776 achievable ones score
+  43.6%.** Abstaining and doing are different skills, and those 36 add 3.8pp to the
+  headline.
+- **167 episodes (20.6%) hit the 30-step cap and none of them succeeded** — the cap
+  truncates already-lost episodes, so raising `max_steps` would buy nothing.
+
+The 118 `fuzzy_match` tasks are graded by a **local Qwen3-VL-8B, not the GPT-4 that
+upstream hardcodes**; quote the programmatic-only **44.7%** if you need a
+judge-independent number. Protocol deviations that must be quoted with the result —
+no inter-task resets, a 29 h gap mid-run, an episode timeout raised twice while
+running — are in [`REPORT.md`](REPORT.md).
+
+Host addresses in the page are redacted (`scripts/sanitize.py`); the embedded
+screenshots are page viewports with no browser chrome.

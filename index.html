@@ -159,4 +159,39 @@ or an application name to filter.</p>
 <p class="sub">All 133 of the fixes were faithful transcriptions too. The crop-frame
 bug is a known, unfixed harness defect and is reported separately rather than
 folded into the headline.</p>
+
+<h2>Another benchmark: WebArena-812 &mdash; agent execution, not grounding</h2>
+<p class="sub" style="margin:0 0 1rem">Separate line of work, included here because
+it shares the harness. <b>A3-Qwen3.5-9B</b> (McGill-NLP) run on all 812 WebArena
+tasks against a self-hosted site stack, scored with BrowserGym's own evaluators.
+This measures whether an agent can <i>complete a task</i>, not whether it can point
+at the right pixel, so none of the numbers above are comparable to it.</p>
+<div class="note"><b>Headline.</b> <b>45.44% (369/812), &plusmn;3.42pp</b> against
+the leaderboard's <b>42.1</b> for the same model on the same 812-task split. That is
+inside the confidence interval, so read it as <b>reproduced, not beaten</b> &mdash;
+and the run deviates from the reference protocol in one way that plausibly accounts
+for the gap: the site stack was never reset between tasks.</div>
+<div class="scroll"><table>
+<tr><th>split</th><th>what it isolates</th><th>SR</th><th>n</th></tr>
+<tr class='hl'><td>overall</td><td class='wrap'>All 812. Leaderboard target 42.1.</td><td class='num'>45.44%</td><td class='num'>369/812</td></tr>
+<tr><td>single-site</td><td class='wrap'>gitlab 56.1 &middot; reddit 49.1 &middot; shopping_admin 47.8 &middot; shopping 44.4 &middot; map 33.0.</td><td class='num'>47.4%</td><td class='num'>359/764</td></tr>
+<tr class='hl'><td>cross-site</td><td class='wrap'>Tasks touching two apps. gitlab+reddit is 1/18. Composing across apps is the failure mode &mdash; not any one site.</td><td class='num'>20.8%</td><td class='num'>10/48</td></tr>
+<tr><td>unachievable (N/A)</td><td class='wrap'>Correct behaviour is to report the task impossible. Abstaining and doing are different skills; mixed together they flatter the model.</td><td class='num'>86.1%</td><td class='num'>31/36</td></tr>
+<tr><td>achievable only</td><td class='wrap'>The 776 that can actually be done. The 36 N/A tasks add 3.8pp to the headline.</td><td class='num'>43.56%</td><td class='num'>338/776</td></tr>
+<tr><td>programmatic judge</td><td class='wrap'>string/URL/HTML matching, no model in the loop. The judge-independent number.</td><td class='num'>44.7%</td><td class='num'>310/694</td></tr>
+<tr><td>LLM judge</td><td class='wrap'>The 118 <code>fuzzy_match</code> tasks. Graded by a local Qwen3-VL-8B, <b>not</b> the GPT-4 upstream hardcodes &mdash; so these are not directly comparable to the leaderboard.</td><td class='num'>50.0%</td><td class='num'>59/118</td></tr>
+</table></div>
+<div class="note"><b>The step cap is not the bottleneck.</b> 167 episodes (20.6%)
+ran out of budget at 30 steps and <b>zero of them succeeded</b>. The cap truncates
+episodes that were already lost, not ones about to finish, so raising
+<code>max_steps</code> would buy nothing.</div>
+<div class="cards"><a class='card' href='webarena-a3.html'><b>WebArena-812 run report</b><span>812 episodes &middot; 13 MB<br>45.44% &nbsp;vs&nbsp; leaderboard 42.1</span></a></div>
+<p class="sub" style="margin-top:1rem">Live dashboard for the run: per-site and
+per-judge breakdowns, action mix over 10128 actions, step and wall-clock
+distributions, the site-stack health probes, and an episode explorer with
+step-by-step screenshots and the action taken at each step. Host addresses are
+redacted. <b>Protocol deviations</b> are listed in
+<a href="https://github.com/estherhan1/cua-grounding-reports/blob/main/REPORT.md">REPORT.md</a>
+and must be quoted with the number: no inter-task resets, a 29 h gap mid-run, and an
+episode timeout that was raised twice while running.</p>
 </main></body></html>

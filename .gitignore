@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+hosts.local.json
+env.json
+data.json
+episodes.json
+*.png
