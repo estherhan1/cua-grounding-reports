@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Error Patterns and Next Steps</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#fcfcfb; --surface-2:#f0efec; --border:#e2e1dc;
+  --text:#0b0b0b; --text-2:#52514e; --muted:#7c7b76;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#8a5cd6;
+  --good:#008300; --bad:#c03a39; --goodbg:#e3f3e3; --badbg:#f8e6e5;
+  --sbg:#e6effb; --gbg:#fdeee6; --wbg:#f8e6e5; --dbg:#ecebe7; --code:#f2f1ed;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121211; --surface:#1a1a19; --surface-2:#242422; --border:#33332f;
+    --text:#ffffff; --text-2:#c3c2b7; --muted:#8f8e86;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a07ce6;
+    --good:#4cc24c; --bad:#e66767; --goodbg:#1d3320; --badbg:#3a2020;
+    --sbg:#16273d; --gbg:#3a2418; --wbg:#3a2020; --dbg:#2a2a27; --code:#202020;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121211; --surface:#1a1a19; --surface-2:#242422; --border:#33332f;
+  --text:#ffffff; --text-2:#c3c2b7; --muted:#8f8e86;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a07ce6;
+  --good:#4cc24c; --bad:#e66767; --goodbg:#1d3320; --badbg:#3a2020;
+  --sbg:#16273d; --gbg:#3a2418; --wbg:#3a2020; --dbg:#2a2a27; --code:#202020;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 80px}
+a{color:var(--s1)}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+h2.part{font-size:22px;margin:56px 0 8px;padding-top:24px;border-top:2px solid var(--border)}
+h3{font-size:17px;margin:0}
+.lede{color:var(--text-2);margin:6px 0 10px;max-width:860px}
+.note{color:var(--muted);font-size:13px;margin:4px 0 12px;max-width:900px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.toc a{font-size:13.5px;text-decoration:none;color:var(--text);border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:5px 13px}
+.toc a:hover{border-color:var(--s1)}
+.intro{max-width:900px;margin:16px 0}.intro p{margin:0 0 10px}
+.terms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin-top:12px;font-size:13.5px;color:var(--text-2)}
+.terms div{padding-top:6px;border-top:1px solid var(--border)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.kpi .v{font-size:28px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .l{color:var(--text-2);font-size:13.5px;margin-top:2px}
+.kpi .s{color:var(--muted);font-size:12px;margin-top:6px}
+.take{margin:18px 0;max-width:900px}.take li{margin:0 0 6px}
+.ep{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin:22px 0}
+.eph{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:650;border-radius:999px;padding:2px 10px}
+.pill.ok{background:var(--goodbg);color:var(--good)}.pill.no{background:var(--badbg);color:var(--bad)}
+.path{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 2px}
+.arr{color:var(--muted)}
+.chip{font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.k-s{background:var(--sbg);color:var(--s1)}.k-g{background:var(--gbg);color:var(--s2)}
+.k-w{background:var(--wbg);color:var(--bad)}.k-d{background:var(--dbg);color:var(--text-2)}
+.instr{background:var(--surface-2);border-left:3px solid var(--s1);border-radius:6px;padding:9px 12px;margin:8px 0;font-size:14px;max-width:900px}
+.steps{list-style:none;padding:0;margin:14px 0 0}
+.st{border-top:1px solid var(--border);padding:14px 0}
+.sth{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.sn{font-weight:650;font-size:14px}
+.what{margin:2px 0 10px;max-width:900px}
+.stb{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+.stb img{width:100%;border:1px solid var(--border);border-radius:6px;display:block}
+.res,.act{background:var(--surface-2);border-radius:6px;padding:8px 10px;font-size:13px}
+.res pre,details pre{white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:4px 0 0;max-height:300px;overflow:auto}
+.rl{display:block;font-size:11.5px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
+.act{word-break:break-word;margin-bottom:8px}
+details{font-size:13px}summary{cursor:pointer;color:var(--s1)}
+details pre{background:var(--code);border-radius:6px;padding:8px}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{font-size:12.5px;color:var(--text-2);background:var(--surface-2)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:grid;grid-template-columns:150px minmax(0,1fr) 70px;gap:10px;align-items:center;margin:8px 0;font-size:13.5px;max-width:720px}
+.bar .t{height:14px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.bar .t i{display:block;height:100%;border-radius:4px}
+@media (max-width:760px){
+  .kpis,.terms{grid-template-columns:1fr}
+  .stb{grid-template-columns:1fr}
+  .bar{grid-template-columns:110px minmax(0,1fr) 56px}
+}
+.steps2{max-width:900px;padding-left:20px}.steps2 li{margin:0 0 10px}
+h3{margin:22px 0 6px}
+</style>
+</head>
+<body>
+<main>
+<h1>From error patterns to finer tasks and metrics</h1>
+<p class="lede">What the agents in all our runs get wrong, and a proposal for the next version of the benchmark: sub-tasks that isolate each failure, and metrics that say where an episode went wrong instead of only pass/fail.</p>
+<p class="note">October 2026. Draws on the <a href="drgui_holo4_search.html">Holo4 + search report</a>, the <a href="drgui_gpt5mini_search.html">gpt-5-mini report and its failure breakdown</a>, the <a href="drgui_gpt5mini_search_v2.html">gpt-5-mini rerun</a>, the <a href="search_gui_switch_examples.html">switching examples</a>, and the earlier Qwen3-VL-8B runs. Numbers marked "new" were computed for this page from the saved Holo4 step logs.</p>
+
+<div class="intro">
+<p><b>Where we are.</b> The benchmark has 455 desktop tasks. Each one needs a recent fact from the web and a change on the desktop (a spreadsheet, a document, an email draft, a JSON file). We ran three agents on it: Qwen3-VL-8B, gpt-5-mini and Holo4-35B. Every task is scored by one check at the end: solved or not.</p>
+<p><b>The problem with one score.</b> A failed episode can fail in very different places. The agent may never look the fact up, find the wrong fact, find the right fact and type it wrongly, or type it correctly and never save. One pass/fail number mixes all of these, and run-to-run noise is large. So two agents (or two versions of an agent) can get the same score for completely different reasons.</p>
+<div class="terms">
+<div><b>Latent task</b>: the normal task. The agent has to find the fact itself.</div>
+<div><b>Explicit task</b>: the same task with the fact written into the instruction. It measures the desktop part alone.</div>
+<div><b>Search tool</b>: a web search service the agent can call. Without it, the agent must research in the browser.</div>
+<div><b>"States the facts"</b>: the agent's own reasoning text contains every needed value. A lower bound on "found the facts".</div>
+</div>
+</div>
+
+<div class="kpis">
+<div class="card kpi"><div class="v">27%</div><div class="l">Of Holo4 episodes where the agent said "done" (with the search tool), only 27% were actually correct</div><div class="s">New. 59% even when the answer was given in the instruction.</div></div>
+<div class="card kpi"><div class="v">57 / 26 / 17</div><div class="l">Holo4 search-tool failures: % that never got all facts / got them but the desktop part also fails with the answer given / got them and still failed</div><div class="s">From the Holo4 report, 237 failures on the core 158 tasks.</div></div>
+<div class="card kpi"><div class="v">2 of 33</div><div class="l">Of the 33 tasks gpt-5-mini solved without search in either of two runs, only 2 were solved in both</div><div class="s">A single run is mostly noise for weak agents. Any new metric must be stable across runs.</div></div>
+</div>
+
+<div class="toc"><a href="#p1">1 · Error patterns</a><a href="#p2">2 · Finer sub-tasks</a><a href="#p3">3 · Finer metrics</a><a href="#p4">4 · Preview on Holo4</a><a href="#p5">5 · Suggested order</a></div>
+
+<h2 class="part" id="p1">1 · Error patterns we have seen</h2>
+<p class="lede">Grouped by where in the episode the failure happens. "Evidence" gives the number and the run it comes from.</p>
+
+<h3>A. Finding the fact</h3>
+<div class="tw"><table>
+<thead><tr><th>Pattern</th><th>What it looks like</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><b>A1 Never looks it up</b></td><td>The agent writes a guess, a placeholder or last year's value without searching.</td><td>gpt-5-mini: the main cause of 40% of failures without search, 15% with it. Qwen3-VL-8B almost never called the search tool unless forced: its trigger is "if you are not sure", and it is always sure.</td></tr>
+<tr><td><b>A2 Thinks the event has not happened yet</b></td><td>"The 2026 World Cup hasn't happened yet", then it searches for a prediction. Or it searches the wrong year ("US Open 2025").</td><td>New: 21% of Holo4 episodes with the search tool and 36% without it contain such a statement. Every task here is about something that already happened.</td></tr>
+<tr><td><b>A3 Accepts a near-miss fact</b></td><td>A prediction instead of the result. The author of a similar public post instead of ours. The tournament champion instead of the team that played the most games. Last year's table.</td><td>Reddit World Cup (Messi, from a betting preview), Reddit personal-finance task ("kneechalice" from public reddit.com), Little League (an email suggests the champion, Curaçao; Holo4 did not fall for it), US Open (2025 list).</td></tr>
+<tr><td><b>A4 Drops a condition</b></td><td>Finds the right kind of fact but ignores a filter in the ticket: "quarter-finals onward", "only weekends inside the window", "only bracket games".</td><td>US Open (took the 4th-round match), Japan box office (one weekend instead of ten), many Calc and VS Code tickets.</td></tr>
+<tr><td><b>A5 Stops at the summary</b></td><td>The search result is a short summary without the table or number. The agent either guesses from it or switches to the browser.</td><td>152 of 613 Holo4 search episodes switched from the search tool to the browser, mostly for this reason. 193 of 1,805 searches were requests to read a whole page.</td></tr>
+<tr><td><b>A6 The source blocks it</b></td><td>Cloudflare check, CAPTCHA, "403 Forbidden", the site blocks the cloud address, or a site that never loads.</td><td>7.0% of Holo4 episodes without the search tool vs 2.8% with it hit a wall; 1 of those 60 was solved. 29 tasks use sources the cloud machines cannot reach.</td></tr>
+<tr><td><b>A7 Asks the same thing again</b></td><td>The same query repeated, or the same failed idea (search for our forum post on the open web) repeated.</td><td>gpt-5-mini: 46% of searches repeat an earlier query (it only sees its last 3 steps). Reddit Nobel task: the same search 8 times. Holo4 repeats almost never.</td></tr>
+</tbody></table></div>
+
+<h3>B. Doing it on the desktop</h3>
+<div class="tw"><table>
+<thead><tr><th>Pattern</th><th>What it looks like</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><b>B1 Corrupts the file while editing</b></td><td>Clicks to place a cursor and types, so text is inserted instead of replaced. Deletes a needed line. Leaves JSON that no longer parses.</td><td>Qwen3-VL-8B: 0% on the VS Code JSON family even with the answer given, because every click landed in the same column. gpt-5-mini: editing errors rose from 11% to 23% of failures once search removed the research errors; 63 of 116 failures that had the right fact died here.</td></tr>
+<tr><td><b>B2 Cannot reach the object</b></td><td>The file icon is behind a maximised window, the right sheet tab or mailbox is never opened, dialogs loop (Import Options, Keep format, Tip of the Day).</td><td>gpt-5-mini failure breakdown; Thunderbird opened a mailbox without the seeded mail until we fixed the profile.</td></tr>
+<tr><td><b>B3 Skips a step it cannot check</b></td><td>Instructions say "switch to public transport", the agent never clicks the transit tab and moves on.</td><td>Google Maps tasks: 4/12 with the answer given, 11/12 once the step said what the screen should show afterwards.</td></tr>
+<tr><td><b>B4 Value right, format wrong</b></td><td>A date typed into a General cell becomes a serial number; a reply saved to the wrong drafts folder; doubled quotes from auto-closing.</td><td>Found by our task audits; fixed in the evaluators, but agents still produce these.</td></tr>
+</tbody></table></div>
+
+<h3>C. Managing the episode</h3>
+<div class="tw"><table>
+<thead><tr><th>Pattern</th><th>What it looks like</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td><b>C1 Says "done" when it is not</b></td><td>The agent stops and declares success without reading back what it wrote.</td><td>New: when Holo4 with the search tool said "done", it was right 27% of the time (59% with the answer given). Half of all its failures end this way.</td></tr>
+<tr><td><b>C2 Runs out of steps</b></td><td>Long research or editing loops reach the 50-step limit.</td><td>New: 41% of Holo4 search episodes and 60% without search. On the harder v1 tasks, 149 of 297.</td></tr>
+<tr><td><b>C3 Gets stuck repeating one action</b></td><td>The same click or the same keystrokes 5 times or more in a row.</td><td>New: 6.7% of Holo4 search episodes; 39 of those 41 failed. Earlier Qwen3-VL-8B: one line retyped 13 times. More steps make it worse, not better.</td></tr>
+<tr><td><b>C4 Does not switch when it should</b></td><td>Keeps using the channel that already failed, or switches only once.</td><td>Of about 20 Holo4 switches that followed a stated failure, none was solved. Going from the screen back to the search tool happened in only 7 of 613 episodes.</td></tr>
+</tbody></table></div>
+
+<h2 class="part" id="p2">2 · Finer sub-tasks</h2>
+<p class="lede">Each sub-task isolates one pattern. All of them can be generated from the tasks we already have, because every task already has its facts, their sources, the correct values and an automatic checker. Most are pairs: the same task in two versions that differ in one thing, so the score difference measures exactly that one pattern.</p>
+<div class="tw"><table>
+<thead><tr><th>Sub-task</th><th>What changes</th><th>Measures</th><th>How to build it</th><th>Cost</th></tr></thead>
+<tbody>
+<tr><td><b>S1 Research only</b></td><td>No desktop work. The agent reads the same ticket (as text plus a screenshot) and answers with the fact values.</td><td>A1 to A5 without any desktop noise. Score per fact.</td><td>Reuse each task's instruction, seed text and fact list; check answers against the stored values.</td><td>Low. No virtual machine needed.</td></tr>
+<tr><td><b>S2 Desktop only, by size</b></td><td>The explicit task (already exists), plus versions that change 1, 3 or all fields.</td><td>B1 per field: does the error rate grow with the number of edits?</td><td>Split each explicit task's checker rules into one-field versions.</td><td>Low.</td></tr>
+<tr><td><b>S3 Find the cue</b></td><td>Stop after the agent has opened the ticket. Ask which facts it needs and for which items.</td><td>Whether it read the ticket correctly, including its conditions (A4, B2).</td><td>Gold = the task's fact list and filter rules, already in the task metadata.</td><td>Low.</td></tr>
+<tr><td><b>S4 Date-anchor pairs</b></td><td>Version 1 says "this year's"; version 2 states the date ("the 2026 final, played on 19 July 2026").</td><td>A2: how much of the failure is the agent believing the event is in the future.</td><td>Template rewrite of the instruction; same checker.</td><td>Low.</td></tr>
+<tr><td><b>S5 Near-miss traps</b></td><td>Plant a plausible wrong value where the agent will see it: a prediction note, last year's file, a similar post by another user, an email that suggests the wrong answer.</td><td>A3. Because each trap has its own wrong value, the checker can label the failure automatically ("took the trap").</td><td>Add one seeded file or message per task; record its value as a known wrong answer.</td><td>Medium.</td></tr>
+<tr><td><b>S6 Condition pairs</b></td><td>The same task with and without one filter ("quarter-finals onward", "inside the window").</td><td>A4: the drop in score when a condition is added.</td><td>Pick tasks where the filter changes the answer; recompute the gold without it.</td><td>Medium.</td></tr>
+<tr><td><b>S7 Blocked-source pairs</b></td><td>The official source is reachable in one version and blocked in the other (we control the network for the virtual machines).</td><td>A6: can the agent find another route (search tool, mirror, other official page)?</td><td>Block one domain per task in the network rules; same checker.</td><td>Medium. Needs the network rule we decided not to build yet.</td></tr>
+<tr><td><b>S8 Check and fix</b></td><td>The file already contains the agent-style answer, with one injected error (wrong value, broken JSON, inserted text). Task: check it against the source and fix it.</td><td>C1 and B1: does the agent read back and verify?</td><td>Take the gold file, inject one error from the B1 list; checker = gold.</td><td>Low.</td></tr>
+<tr><td><b>S9 Which channel</b></td><td>The fact is only on the desktop, only on the web, or the two disagree. Like the Reddit tasks, where only the forum had the post.</td><td>C4: does the agent pick, and switch to, the right channel?</td><td>Extend the Reddit design to the desktop: put a ticket code in a local file and a public fact on the web.</td><td>Medium.</td></tr>
+</tbody></table></div>
+<p class="note">S1, S3, S4 and S8 need no new facts and no new evaluator code, so they could be built in a few days. S5 and S6 need hand checking that each trap or filter really changes the answer.</p>
+
+<h2 class="part" id="p3">3 · Finer metrics</h2>
+<p class="lede">The pass/fail score stays the headline. These metrics are reported next to it, and most of them can be computed from the logs we already save.</p>
+
+<h3>Stage funnel (where did it fail?)</h3>
+<div class="tw"><table>
+<thead><tr><th>Metric</th><th>Definition</th><th>Pattern</th><th>Available now?</th></tr></thead>
+<tbody>
+<tr><td>Looked it up</td><td>Share of episodes with at least one search or research browser step.</td><td>A1</td><td>Yes</td></tr>
+<tr><td>Fact recall</td><td>Share of the needed facts whose correct value appears in the agent's reasoning or answer, per fact, not all-or-nothing.</td><td>A2–A5</td><td>Yes, as a lower bound</td></tr>
+<tr><td>Trap rate</td><td>Share of episodes that wrote a known wrong value (prediction, last year, trap file).</td><td>A3</td><td>After S5</td></tr>
+<tr><td>Fact-to-file conversion</td><td>Of episodes that had all facts, the share that wrote them correctly.</td><td>B1–B4</td><td>Yes</td></tr>
+<tr><td>Field score</td><td>Share of checker rules passed, split into "value right" and "format right".</td><td>B1, B4</td><td>Needs saved final files</td></tr>
+<tr><td>File integrity</td><td>The file still opens or parses, and fields the task did not ask to change are unchanged.</td><td>B1</td><td>Needs saved final files</td></tr>
+<tr><td>Saved</td><td>The change reached the file or drafts folder the checker reads.</td><td>B4</td><td>Needs saved final files</td></tr>
+</tbody></table></div>
+
+<h3>Behaviour</h3>
+<div class="tw"><table>
+<thead><tr><th>Metric</th><th>Definition</th><th>Pattern</th><th>Available now?</th></tr></thead>
+<tbody>
+<tr><td>"Done" precision</td><td>Of episodes where the agent said it was finished, the share that were correct.</td><td>C1</td><td>Yes</td></tr>
+<tr><td>Step-limit rate</td><td>Share of episodes that ran out of steps.</td><td>C2</td><td>Yes</td></tr>
+<tr><td>Loop rate</td><td>Share of episodes with 5 or more identical actions in a row.</td><td>C3</td><td>Yes</td></tr>
+<tr><td>Repeat-query rate</td><td>Share of searches that repeat an earlier one in the same episode.</td><td>A7</td><td>Yes</td></tr>
+<tr><td>Future-belief rate</td><td>Share of episodes where the agent says the event has not happened yet or is past its training.</td><td>A2</td><td>Yes (keyword match)</td></tr>
+<tr><td>Recovery rate</td><td>After a stated failure (blocked, empty result, not loading), the share of episodes that switch channel and then get the fact.</td><td>A6, C4</td><td>Yes</td></tr>
+</tbody></table></div>
+
+<h3>Cost and stability</h3>
+<div class="tw"><table>
+<thead><tr><th>Metric</th><th>Definition</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Steps and seconds to the first fact, and to all facts</td><td>From the step logs.</td><td>Search beat browsing mainly on speed: a median 3.5 steps sooner when both found the facts.</td></tr>
+<tr><td>Searches per fact; tokens or dollars per solved task</td><td>From the search and usage logs.</td><td>Lets a cheaper agent be compared fairly with a stronger one.</td></tr>
+<tr><td>Solved in both of two runs</td><td>Run every arm twice; report the average and the both-runs rate.</td><td>For gpt-5-mini, one run decided most comparisons by noise.</td></tr>
+<tr><td>Research gap split</td><td>The gap between explicit and latent scores, split into "never found the facts" and "found them, still failed".</td><td>Turns the 57 / 26 / 17 breakdown into a standard number for every agent.</td></tr>
+</tbody></table></div>
+
+<h2 class="part" id="p4">4 · Preview: Holo4 under these metrics</h2>
+<p class="lede">New, computed from the existing Holo4 step logs: 613 episodes with the search tool, 613 without, 158 with the answer given. No new runs.</p>
+<div class="tw"><table>
+<thead><tr><th>Metric</th><th class="n">With search tool</th><th class="n">Without</th><th class="n">Answer given</th></tr></thead>
+<tbody>
+<tr><td>Solved</td><td class="n">16.2%</td><td class="n">4.1%</td><td class="n">51.9%</td></tr>
+<tr><td>States at least one fact</td><td class="n">68.0%</td><td class="n">45.2%</td><td class="n">87.3%</td></tr>
+<tr><td>States every fact</td><td class="n">39.2%</td><td class="n">16.6%</td><td class="n">80.4%</td></tr>
+<tr><td>Fact-to-file conversion (solved, of those that stated every fact)</td><td class="n">32.1%</td><td class="n">18.6%</td><td class="n">48.8%</td></tr>
+<tr><td>"Done" precision</td><td class="n">27.2%</td><td class="n">8.8%</td><td class="n">59.0%</td></tr>
+<tr><td>Said "done" but wrong (share of episodes)</td><td class="n">43.2%</td><td class="n">35.7%</td><td class="n">34.8%</td></tr>
+<tr><td>Ran out of steps</td><td class="n">40.6%</td><td class="n">60.4%</td><td class="n">15.2%</td></tr>
+<tr><td>Stuck repeating one action (5+ in a row)</td><td class="n">6.7%</td><td class="n">7.7%</td><td class="n">6.3%</td></tr>
+<tr><td>Says the event has not happened yet</td><td class="n">20.6%</td><td class="n">36.2%</td><td class="n">1.3%</td></tr>
+<tr><td>Average steps per episode</td><td class="n">34.1</td><td class="n">40.2</td><td class="n">23.2</td></tr>
+</tbody></table></div>
+<p class="note">Fact counts use the "states the facts" heuristic, which undercounts on the harder v1 tasks. For the "answer given" column the facts are in the instruction, so fact recall is trivially high there.</p>
+<p>Two things the single score did not show. First, the search tool more than doubles fact recall, but only about a third of episodes that had every fact went on to a correct file. Second, the agent's "done" is unreliable in every setting, including when it was handed the answer. Both point to the desktop half (B1, C1) as the next bottleneck for Holo4, which the S2 and S8 sub-tasks would measure directly.</p>
+
+<h2 class="part" id="p5">5 · Suggested order</h2>
+<ol class="steps2">
+<li><b>Re-score what we have (no new runs).</b> Add the "available now" metrics to every report: fact recall, conversion, "done" precision, step-limit, loop and future-belief rates. About 1 day.</li>
+<li><b>Save the final files.</b> Change the harness to copy the edited file and the checker's per-rule log out of the virtual machine before it is deleted. This unlocks field score, file integrity and saved. Small change, applies to all future runs.</li>
+<li><b>Build the cheap sub-tasks first</b>: S1 research only, S4 date-anchor pairs, S8 check and fix, S3 find the cue. About 100 tasks each from the existing bank.</li>
+<li><b>Then the trap and condition pairs</b> (S5, S6), which need hand checking, and S7 if we decide to add the network rule.</li>
+<li><b>Run two rounds per arm</b> and report averages, so differences between agents are not noise.</li>
+</ol>
+</main>
+
+</body>
+</html>
