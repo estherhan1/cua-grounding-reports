@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Search and Screen Switching</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f7f7f5; --surface:#fcfcfb; --surface-2:#f0efec; --border:#e2e1dc;
+  --text:#0b0b0b; --text-2:#52514e; --muted:#7c7b76;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#8a5cd6;
+  --good:#008300; --bad:#c03a39; --goodbg:#e3f3e3; --badbg:#f8e6e5;
+  --sbg:#e6effb; --gbg:#fdeee6; --wbg:#f8e6e5; --dbg:#ecebe7; --code:#f2f1ed;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121211; --surface:#1a1a19; --surface-2:#242422; --border:#33332f;
+    --text:#ffffff; --text-2:#c3c2b7; --muted:#8f8e86;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a07ce6;
+    --good:#4cc24c; --bad:#e66767; --goodbg:#1d3320; --badbg:#3a2020;
+    --sbg:#16273d; --gbg:#3a2418; --wbg:#3a2020; --dbg:#2a2a27; --code:#202020;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121211; --surface:#1a1a19; --surface-2:#242422; --border:#33332f;
+  --text:#ffffff; --text-2:#c3c2b7; --muted:#8f8e86;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#a07ce6;
+  --good:#4cc24c; --bad:#e66767; --goodbg:#1d3320; --badbg:#3a2020;
+  --sbg:#16273d; --gbg:#3a2418; --wbg:#3a2020; --dbg:#2a2a27; --code:#202020;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 80px}
+a{color:var(--s1)}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+h2.part{font-size:22px;margin:56px 0 8px;padding-top:24px;border-top:2px solid var(--border)}
+h3{font-size:17px;margin:0}
+.lede{color:var(--text-2);margin:6px 0 10px;max-width:860px}
+.note{color:var(--muted);font-size:13px;margin:4px 0 12px;max-width:900px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.toc a{font-size:13.5px;text-decoration:none;color:var(--text);border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:5px 13px}
+.toc a:hover{border-color:var(--s1)}
+.intro{max-width:900px;margin:16px 0}.intro p{margin:0 0 10px}
+.terms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin-top:12px;font-size:13.5px;color:var(--text-2)}
+.terms div{padding-top:6px;border-top:1px solid var(--border)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.kpi .v{font-size:28px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .l{color:var(--text-2);font-size:13.5px;margin-top:2px}
+.kpi .s{color:var(--muted);font-size:12px;margin-top:6px}
+.take{margin:18px 0;max-width:900px}.take li{margin:0 0 6px}
+.ep{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin:22px 0}
+.eph{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:650;border-radius:999px;padding:2px 10px}
+.pill.ok{background:var(--goodbg);color:var(--good)}.pill.no{background:var(--badbg);color:var(--bad)}
+.path{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 2px}
+.arr{color:var(--muted)}
+.chip{font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.k-s{background:var(--sbg);color:var(--s1)}.k-g{background:var(--gbg);color:var(--s2)}
+.k-w{background:var(--wbg);color:var(--bad)}.k-d{background:var(--dbg);color:var(--text-2)}
+.instr{background:var(--surface-2);border-left:3px solid var(--s1);border-radius:6px;padding:9px 12px;margin:8px 0;font-size:14px;max-width:900px}
+.steps{list-style:none;padding:0;margin:14px 0 0}
+.st{border-top:1px solid var(--border);padding:14px 0}
+.sth{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.sn{font-weight:650;font-size:14px}
+.what{margin:2px 0 10px;max-width:900px}
+.stb{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+.stb img{width:100%;border:1px solid var(--border);border-radius:6px;display:block}
+.res,.act{background:var(--surface-2);border-radius:6px;padding:8px 10px;font-size:13px}
+.res pre,details pre{white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:4px 0 0;max-height:300px;overflow:auto}
+.rl{display:block;font-size:11.5px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
+.act{word-break:break-word;margin-bottom:8px}
+details{font-size:13px}summary{cursor:pointer;color:var(--s1)}
+details pre{background:var(--code);border-radius:6px;padding:8px}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{font-size:12.5px;color:var(--text-2);background:var(--surface-2)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:grid;grid-template-columns:150px minmax(0,1fr) 70px;gap:10px;align-items:center;margin:8px 0;font-size:13.5px;max-width:720px}
+.bar .t{height:14px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.bar .t i{display:block;height:100%;border-radius:4px}
+@media (max-width:760px){
+  .kpis,.terms{grid-template-columns:1fr}
+  .stb{grid-template-columns:1fr}
+  .bar{grid-template-columns:110px minmax(0,1fr) 56px}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>When search fails, try the screen (and the other way round)</h1>
+<p class="lede">Real examples of agents switching between a search tool and the screen after the first one failed, plus the anti-bot walls they hit. Collected from our September Reddit-forum runs and the October Holo4 runs.</p>
+<p class="note">Part of the <a href="drgui_holo4_search.html">Holo4 + search report</a>. October 2026.</p>
+
+<div class="intro">
+<p>Every agent here can get information two ways. It can call a <b>search tool</b>, which returns web search results as text and can also read the text of one web page. Or it can work on the <b>screen</b>: click and type in the virtual machine, including its Chrome browser, its terminal and its other apps. A <b>switch</b> is when the agent stops using one way and tries the other because the first one did not give it what it needed.</p>
+<div class="terms">
+<div><b>Search tool</b>: a web search service we connect to the agent. It sees the public web, not the virtual machine.</div>
+<div><b>Screen</b>: everything the agent does by clicking and typing inside the virtual machine.</div>
+<div><b>Test forum</b>: a private copy of a Reddit-style forum used by the WebArena benchmark. Search engines cannot see it.</div>
+<div><b>Wall</b>: a page that refuses an automated visitor, such as a Cloudflare "verify you are human" check, a CAPTCHA, or an "HTTP 403 Forbidden" error.</div>
+<div><b>Step</b>: one action by the agent. Episodes stop at 50 steps.</div>
+<div><b>Solved</b>: the automatic checker accepted the final files or answer.</div>
+</div>
+</div>
+
+<div class="kpis">
+<div class="card kpi"><div class="v">3</div><div class="l">Reddit-forum episodes (September) where the search tool missed our post and the forum's own search box found it</div><div class="s">1 solved. The other 2 found the post but got a later question wrong.</div></div>
+<div class="card kpi"><div class="v">152 / 7</div><div class="l">Holo4 episodes that switched search tool → screen / screen → search tool (out of 613 with the search tool)</div><div class="s">Most switches happen because the search result is a summary without the table or number the task needs.</div></div>
+<div class="card kpi"><div class="v">7.0% vs 2.8%</div><div class="l">Holo4 episodes that hit a wall, without vs with the search tool (43 of 613 vs 17 of 613)</div><div class="s">Only 1 of these 60 episodes was solved. Counted from the agent's own notes, so the numbers are approximate.</div></div>
+</div>
+
+<ul class="take">
+<li><b>The two directions are not equal.</b> Going from the search tool to the screen is common. Going back from the screen to the search tool is rare, and usually happens only when a site will not load or refuses the virtual machine.</li>
+<li><b>Recovering from a failure rarely ends in a solved task.</b> Of the roughly 20 Holo4 switches where the agent wrote down that the first way had failed, none was solved. The two solved Holo4 examples below switched early and kept going.</li>
+<li><b>On the test forum the problem is privacy, not anti-bot.</b> The search tool cannot find our post because the forum is not on the public web. On the public web it is the other way round: real sites block the virtual machine, and the search tool gets around many of those blocks.</li>
+</ul>
+
+<div class="toc"><a href="#p1">1 · Reddit test forum</a><a href="#p2">2 · Holo4 on the desktop</a><a href="#p3">3 · Anti-bot walls</a><a href="#p4">4 · More short cases</a></div>
+
+<h2 class="part" id="p1">1 · Reddit test forum: the search tool misses, the forum search box finds it</h2>
+<p class="lede">September 2026, WebArena's Reddit-style forum, a Qwen3-VL-8B agent that has a search tool and a screen. Each task asks about a post that we planted on the test forum (a ticket or reference code) plus a recent public fact. The search tool can find the public fact, but it can never find the planted post. So the agent has to switch to the screen.</p>
+<p class="note">Screenshots are the screen the agent saw at that step, with numbered boxes on the clickable parts. Two more episodes took a similar path (TGA and Eurovision). In one episode (Nobel Prize) the agent repeated the same search for the post 8 times and never switched.</p>
+<div class="toc"><a href="#r9009">Signal backup post</a><a href="#r9011">World Cup sweepstake post</a><a href="#r9007">Tuvalu treaty post</a></div>
+<section class="ep" id="r9009"><div class="eph"><h3>Signal backup post</h3><span class="pill ok">Solved</span></div>
+<div class="path"><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-d">Finish</span></div>
+<p class="lede">The search tool found the public price but not our post. One more search for the post itself came back empty, so the agent used the forum&#x27;s own search box and found it.</p>
+<div class="instr"><b>Task given to the agent</b><br>In the technology forum, find the post I (MarvelsGrantMan136) submitted about the paid tier of Signal&#x27;s new secure backups. Tell me the ticket number written in the post and the answer to the question it asks: the monthly price in US dollars and the storage limit written as &#x27;100 GB&#x27;.</div>
+<p class="note"><b>Correct answer:</b> Ticket SIG-7734, US$1.99 a month, 100 GB.</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 2</span><span class="chip k-s">Search tool</span></div>
+<p class="what">The public facts (price, storage) are on the open web, so this search works.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9009_2.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9009_2.jpg" alt="screen at step 2"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: Signal secure backups paid tier price and storage limit</div><details><summary>Agent's own reasoning</summary><pre>The repeated click on the &quot;Submissions&quot; link is not progressing the task. I need to search for the specific post about Signal&#x27;s paid tier. I will perform a web search to find information about Signal&#x27;s new secure backups and their pricing details.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 3</span><span class="chip k-s">Search tool</span></div>
+<p class="what">This search tries to find our forum post on the open web. It cannot: the post exists only on the test forum, which search engines never see. The results are unrelated pages.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9009_3.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9009_3.jpg" alt="screen at step 3"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: MarvelsGrantMan136 Signal paid tier backup forum post</div><details><summary>Agent's own reasoning</summary><pre>Based on the search results, Signal&#x27;s paid tier for secure backups is $1.99 per month and includes 100 GB of storage. However, I still need to find the specific post submitted by MarvelsGrantMan136 on the technology forum. Since the current page listing does not show the relevant post, I will need to search for it directly on the forum.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 5</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Switch: the agent gives up on the search tool for the post and types into the forum&#x27;s own search box.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9009_5.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9009_5.jpg" alt="screen at step 5"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Types into the forum&#x27;s own search box: Signal secure backups paid tier</div><details><summary>Agent's own reasoning</summary><pre>I have clicked on the search input field. Now, I will type a search query to find the specific post by MarvelsGrantMan136 about Signal&#x27;s paid tier.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 6</span><span class="chip k-d">Finish</span></div>
+<p class="what">All three parts are correct: SIG-7734 came from the forum, $1.99 and 100 GB from the search tool.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9009_6.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9009_6.jpg" alt="screen at step 6"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Final answer: Ticket number: SIG-7734. Monthly price: $1.99. Storage limit: 100 GB.</div><details><summary>Agent's own reasoning</summary><pre>I have found the specific post by MarvelsGrantMan136 about Signal&#x27;s paid tier. The ticket number in the post is SIG-7734. The post asks for the monthly price in US dollars and the storage limit written as &#x27;100 GB&#x27;. Based on the search results, the monthly price is $1.99 and the storage limit is 100 GB.</pre></details></div></div></li>
+</ol></section>
+<section class="ep" id="r9011"><div class="eph"><h3>World Cup sweepstake post</h3><span class="pill no">Failed</span></div>
+<div class="path"><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-d">Finish</span></div>
+<p class="lede">Same pattern: the search tool cannot see the forum post, the forum search box can. The failure comes afterwards: the agent searched for a prediction instead of the result.</p>
+<div class="instr"><b>Task given to the agent</b><br>In the sports forum, find the post I (MarvelsGrantMan136) submitted about our office sweepstake on the 2026 World Cup final. Tell me the sweepstake code written in the post and the answer to the question it asks: the winning national team and the full name of the player who scored the winning goal.</div>
+<p class="note"><b>Correct answer:</b> Code WCF-3162, Spain, Ferran Torres.</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 1</span><span class="chip k-s">Search tool</span></div>
+<p class="what">The search tool cannot see the test forum, so this search returns sweepstake kits from news sites.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9011_1.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9011_1.jpg" alt="screen at step 1"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: 2026 World Cup sweepstake post by MarvelsGrantMan136</div><details><summary>Agent's own reasoning</summary><pre>I see that I&#x27;m still on the Submissions page, which shows the same list of posts by MarvelsGrantMan136. None of these posts mention the 2026 World Cup or a sweepstake. I need to check if there&#x27;s a different section or if I need to search for the specific post.
+
+Since the task is to find a post about the 2026 World Cup final sweepstake, I should try searching for it directly. I&#x27;ll use the search tool to look for posts by MarvelsGrantMan136 that mention &quot;2026 World Cup&quot; or &quot;sweepstake&quot;.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 6</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Switch to the forum&#x27;s own search box.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9011_6.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9011_6.jpg" alt="screen at step 6"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Types into the forum&#x27;s own search box: 2026 World Cup sweepstake</div><details><summary>Agent's own reasoning</summary><pre>I&#x27;m now on the WallStreetBets forum, which is not related to sports. I need to search for the specific post by MarvelsGrantMan136 about the 2026 World Cup sweepstake. I&#x27;ll use the search bar to look for this post.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 7</span><span class="chip k-s">Search tool</span></div>
+<p class="what">It found the post and the code. It then assumed the final had not happened yet and searched for a prediction.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9011_7.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9011_7.jpg" alt="screen at step 7"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: predicted winner of 2026 FIFA World Cup final and player who will score winning goal</div><details><summary>Agent's own reasoning</summary><pre>I found the post by MarvelsGrantMan136 about the 2026 World Cup sweepstake! The post is titled &quot;Settling our office sweepstake on the 2026WorldCup final&quot; and it&#x27;s in the sports forum. The sweepstake code is WCF-3162, and the post asks for the official result of the 2026 FIFA World Cup final: which national team won, and which player scored the winning goal.
+
+Now I need to find the answer to the question in the post. Since the 2026 World Cup hasn&#x27;t happened yet, I need to search for the predicted winner and the predicted player who will score the winning goal.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 8</span><span class="chip k-d">Finish</span></div>
+<p class="what">Code right, Spain right (it came from a betting preview), scorer wrong (Messi instead of Ferran Torres).</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9011_8.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9011_8.jpg" alt="screen at step 8"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Final answer: Sweepstake code: WCF-3162. Winning national team: Spain. Player who scored the winning goal: Lionel Messi.</div><details><summary>Agent's own reasoning</summary><pre>Based on the search results, the predicted winner of the 2026 FIFA World Cup final is Spain, with a 17.0% chance according to AI predictions. The predicted player who will score the winning goal is Lionel Messi, who is mentioned as the favorite with eight goals.
+
+Now I have all the information needed to answer the task. The sweepstake code is WCF-3162, the predicted winning national team is Spain, and the predicted player who will score the winning goal is Lionel Messi.</pre></details></div></div></li>
+</ol></section>
+<section class="ep" id="r9007"><div class="eph"><h3>Tuvalu treaty post</h3><span class="pill no">Failed</span></div>
+<div class="path"><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-d">Finish</span></div>
+<p class="lede">Two searches for the forum post both missed before the agent tried the forum search box. It found the post, but it guessed the treaty name instead of looking it up.</p>
+<div class="instr"><b>Task given to the agent</b><br>In the worldnews forum, find the post I (MarvelsGrantMan136) submitted about Tuvalu and climate migration to Australia. Tell me the reference code written in the post and the answer to the question it asks: the treaty name and the number of visas per year.</div>
+<p class="note"><b>Correct answer:</b> Code TUV-5518, the Falepili Union treaty, 280 visas a year.</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 2</span><span class="chip k-s">Search tool</span></div>
+<p class="what">First search for the post on the open web: misses.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9007_2.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9007_2.jpg" alt="screen at step 2"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: Tuvalu climate migration Australia forum post MarvelsGrantMan136</div><details><summary>Agent's own reasoning</summary><pre>The current page listing does not show any post related to Tuvalu and climate migration to Australia. I need to search for this specific post or find a way to locate it.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 6</span><span class="chip k-s">Search tool</span></div>
+<p class="what">Second search with the same idea: misses again.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9007_6.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9007_6.jpg" alt="screen at step 6"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: Tuvalu climate migration Australia MarvelsGrantMan136 worldnews forum</div><details><summary>Agent's own reasoning</summary><pre>The post by MarvelsGrantMan136 about Tuvalu and climate migration to Australia is not visible on the current page. I need to search for it directly or navigate to a different section of the forum.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 8</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Switch to the forum&#x27;s own search box.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9007_8.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9007_8.jpg" alt="screen at step 8"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Types into the forum&#x27;s own search box: Tuvalu climate migration Australia</div><details><summary>Agent's own reasoning</summary><pre>I have clicked the search input field. Now, I will type &quot;Tuvalu climate migration Australia&quot; to search for the specific post by MarvelsGrantMan136.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 9</span><span class="chip k-d">Finish</span></div>
+<p class="what">Code and 280 visas are right. The treaty name is a guess (&quot;Tuvalu-Australia Climate Migration Agreement&quot;); the real name, Falepili Union, never appeared in its searches.</p>
+<div class="stb">
+<a href="assets_switch_examples/reddit_9007_9.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/reddit_9007_9.jpg" alt="screen at step 9"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Final answer: Reference code: TUV-5518. Treaty name: Tuvalu-Australia Climate Migration Agreement. Number of visas per year: 280.</div><details><summary>Agent's own reasoning</summary><pre>I have found the post by MarvelsGrantMan136 about Tuvalu and climate migration to Australia. The reference code in the post is &quot;TUV-5518&quot;. The question in the post asks for the treaty name and the number of visas per year.
+
+From the search results, I found that the treaty name is likely the &quot;Tuvalu-Australia Climate Migration Agreement&quot; and the number of visas per year is 280.</pre></details></div></div></li>
+</ol></section>
+
+<h2 class="part" id="p2">2 · Holo4 on the desktop: switching on the public web</h2>
+<p class="lede">October 2026, OSWorld desktop tasks, the open-weight Holo4-35B agent with a search tool. Each task needs a recent fact from an official website and a change to a file, a spreadsheet or an email draft. Each example shows the steps around the switches. For a search step we show what the search tool returned; for a screen step we show the screen the agent was looking at.</p>
+<div class="toc"><a href="#h_cpc">Taiwan fuel prices in a spreadsheet</a><a href="#h_llws">Little League &quot;Road Warrior&quot; plaque</a><a href="#h_reddit">Japan box office tracker</a><a href="#h_nhtsa">Ford recall letters</a><a href="#h_usopen">US Open longest matches</a></div>
+<section class="ep" id="h_cpc"><div class="eph"><h3>Taiwan fuel prices in a spreadsheet</h3><span class="pill ok">Solved</span></div>
+<div class="path"><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span></div>
+<p class="lede">The search tool could not show the fuel price table, so the agent opened the official page in the browser. That page only went back to late August, so it went back to the search tool for the July price.</p>
+<div class="instr"><b>Task given to the agent</b><br>In Fuel_Prices_Sort.xlsx, fill column B with CPC&#x27;s official 95 unleaded price for each listed week, then sort the rows by that price from lowest to highest, keeping the header on top.</div>
+<p class="note"><b>Correct answer:</b> 31.3 (week of 13 July), 32.0 (3 August), 32.7 (14 September), then sorted. &nbsp;·&nbsp; episode length 37 steps (limit 50)</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 3</span><span class="chip k-s">Search tool</span></div>
+<p class="what">It asks the search tool to open the official price-history page. The search tool returns only a short summary of the page, without the table.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>Page https://www.cpc.com.tw/en/HistoryPrice.aspx?n=3058:
+CPC Corporation, Taiwan-Historical Gasoline and Diessel Prices
+CPC Corporation, Taiwan
+Official Mailbox
+Oil price
+Historical Gasoline and Diessel Prices
+92 Unleaded gasoline
+95 Unleaded gasoline
+98 Unleaded gasoline
+Head office：No. 2, Zuonan Rd., Nanzi Dist., Kaohsiung City 811251 , Taiwan (R.O.C.) / Tel:886-7-5824141 / Fax:886-7-3632844
+Taipei office：No. 3, Songren Rd., Xinyi Dist., Taipei City 110207 , Taiwan (R.O.C.) / Tel:886-2-87898989 / Fax:886-2-87899000
+Copyright 2013 CPC Corporation, Taiwan All rights reserved.
+The official website of CPC Corporation, Taiwan is registered with Taiwan s Digital DNA Anti-Fraud Platform (TWDNA.ORG). Should you have any concerns, please visit the platform s official website and enter the DNA verification code for verification.
+Taiwan Digital DNA Code: 886000000227086953478</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: https://www.cpc.com.tw/en/HistoryPrice.aspx?n=3058</div><details><summary>Agent's own reasoning</summary><pre>I need to find the CPC fuel prices for specific dates. Let me visit the CPC website directly to get the historical prices. The dates in the spreadsheet are:
+- 2026-09-14
+- 2026-07-13
+- 2026-08-03
+
+Let me visit the CPC historical prices page to get the exact prices for these dates.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 4</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Switch 1 (search tool → browser). The agent says why: &quot;The CPC page didn&#x27;t render the data in the search result.&quot;</p>
+<div class="stb">
+<a href="assets_switch_examples/conv5_calc_51b11269_S2_4.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/conv5_calc_51b11269_S2_4.jpg" alt="screen at step 4"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(33, 58)</div><details><summary>Agent's own reasoning</summary><pre>The CPC page didn&#x27;t render the data in the search result. Let me try to open it in the browser directly. But first, let me try to use the Chrome browser to navigate to the CPC website. Let me click on the Chrome icon and navigate there.
+
+Actually, let me think about what I know so far:
+- From search results, I can piece together the CPC 95 unleaded prices:
+  - Around Feb 2026 to mid-Sept 2026: NT$33.9 (from result 7)
+  - Aug 3, 2026: NT$32.0 (from result 4)
+  - Late Feb to mid-Sept 2026: NT$33.9, then dropped to NT$30.4 (from result 7)
+  - Sep 12, 2026: raised to NT$32.7 (from result 2)
+
+Wait, let me re-read result 7 more carefully:
+&quot;Taiwan&#x27;s Fuel Pricing Mechanism and CPC: The …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 8</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">In the browser the table is readable: 14 September = 32.7.</p>
+<div class="stb">
+<a href="assets_switch_examples/conv5_calc_51b11269_S2_8.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/conv5_calc_51b11269_S2_8.jpg" alt="screen at step 8"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.moveTo(960, 599); pyautogui.scroll(-5)</div><details><summary>Agent's own reasoning</summary><pre>I can see the CPC historical gasoline prices page. I can see some data:
+- 2026/10/05: 95 Unleaded = 32.7
+- 2026/09/28: 95 Unleaded = 32.7
+- 2026/09/21: 95 Unleaded = 32.7
+- 2026/09/14: 95 Unleaded = 32.7
+- 2026/09/07: 95 Unleaded = 32
+- 2026/08/31: 95 Unleaded = 32
+- 2026/08/24: 95 Unleaded = 32
+
+I need to scroll down to see more data. Let me scroll down to see all the prices.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 12</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Problem: the table only goes back to 24 August, and the spreadsheet also needs 13 July.</p>
+<div class="stb">
+<a href="assets_switch_examples/conv5_calc_51b11269_S2_12.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/conv5_calc_51b11269_S2_12.jpg" alt="screen at step 12"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.moveTo(960, 599); pyautogui.scroll(10)</div><details><summary>Agent's own reasoning</summary><pre>I can see the CPC price history. I can see dates from 2026/08/24 to 2026/10/05. But I need the weeks:
+- 2026-09-14
+- 2026-07-13
+- 2026-08-03
+
+I can see:
+- 2026/09/14: 95 Unleaded = 32.7
+- 2026/08/24: 95 Unleaded = 32 (this is closest to 2026-08-03 but not exact)
+
+I need to scroll up to see earlier dates (2026-07-13 and 2026-08-03). Let me scroll up.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 17</span><span class="chip k-s">Search tool</span></div>
+<p class="what">Switch 2 (browser → search tool), to get the older week.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>[1] Fuel prices to remain unchanged in Taiwan next week
+https://focustaiwan.tw/business/202607110015
+Jul 11, 2026 - In a statement, CPC said it would recommend that retail prices remain at NT$29.8 (US$0.93), NT$31.3 and NT$33.3 per liter for 92, 95, and 98- ...
+
+[2] Taiwan hikes gasoline, diesel prices by NT$1.8 and ...
+https://www.taiwannews.com.tw/news/6325889
+Price per liter rises to NT$30.7, NT$32.2, and NT$34.2 for 92-, 95-, and 98-octane unleaded gasoline | Mar. 23, 2026 13:08.
+
+[3] LOW GAS PRICE: Taiwan will keep gasoline and diesel ...
+https://www.facebook.com/Pinoytaiwannews/posts/low-gas-price-taiwan-will-keep-gasoline-and-diesel-prices-unchanged-this-week-as/1529215071939642/
+6 months ago - NT$28.90 (P53.75) per liter for 92-octane unleaded gasoline, NT$30.40 (P56.54) for 95-octane unleaded, NT$32.40 (P60.26)for 98-octane unleaded, ...
+
+[4] Historical Gasoline and Diessel Prices
+https://www.cpc.com.tw/en/HistoryPrice.aspx?n=3058
+92 Unleaded gasoline, 95 Unleaded gasoline, 98 Unleaded gasoline, Super/Premium diesel. 2026/10/05, 31.2, 32.7, 34.7, 29.9. 2026/09/28, 31.2, 32.7, 34.7, 29.9.
+
+[5] Petroleum Price Information Management and Analysis ...
+https://www2.moeaea.gov.tw/oil111/Home/IndexEN
+Unleaded Gasoline 92. 31.18 NT$/L. horizontal_rule 0.00. Unleaded Gasoline 95. 32.68 NT$/L. horizontal_rule 0.00. Unleaded Gasoline 98. 34.68 NT$/L. north 0.01.
+
+[6] Fuel prices to stay unchanged this week, CPC says
+https://www.taipeitimes.com/News/taiwan/archives/2026/04/05/2003855063
+Apr 5, 2026 - After the decision, retail gasoline prices would stay at NT$32.4, NT$33.9 …</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: CPC Taiwan fuel price July 2026 95 unleaded NT$</div><details><summary>Agent's own reasoning</summary><pre>I can see the CPC historical prices page. The table shows data from 2026/08/24 to 2026/10/05. I need to scroll down to see if there&#x27;s more data, or check if there are earlier dates. The spreadsheet has weeks starting from 2026-07-13. Let me scroll down to see the full table and check if there are more rows below 2026/08/24.
+
+Actually, looking at the chart, the x-axis starts from 2026/08/24, which suggests the data on this page starts from that date. The spreadsheet has weeks from 2026-07-13, 2026-07-13, 2026-08-03. 
+
+Wait, let me re-read the spreadsheet. The weeks are:
+- Row 2: 2026-09-14
+- Row 3: 2026-07-13
+- Row 4: 2026-08-03
+
+The CPC page data starts from 2026/08/24. So I need to find …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 18</span><span class="chip k-s">Search tool</span></div>
+<p class="what">A news result says the 95 price was held at NT$31.3 on 11 July. The 3 August price (32.0) came from its very first search, so it now has all three.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>[1] CPC to raise domestic gasoline, diesel prices next week
+https://focustaiwan.tw/business/202609120011
+Sep 12, 2026 - In a statement, CPC said its recommended retail prices will rise to NT$31.2, NT$32.7 and NT$34.7 per liter for 92, 95 and 98-octane unleaded ...
+
+[2] State-owned oil supplier CPC Corp., Taiwan announced ...
+https://www.facebook.com/focus.tw/posts/state-owned-oil-supplier-cpc-corp-taiwan-announced-saturday-that-it-will-raise-d/1499830372187695/
+3 weeks ago - The price of 95 unleaded will be raised to NT$30.4 a liter, starting today. P56.54) for 95-octane unleaded, NT$32.40 (P60.26)for 98-octane ...
+
+[3] Fuel prices to stay unchanged this week, CPC says
+https://www.taipeitimes.com/News/taiwan/archives/2026/04/05/2003855063
+Apr 5, 2026 - After the decision, retail gasoline prices would stay at NT$32.4, NT$33.9 and NT$35.9 per liter for 92, 95 and 98-octane unleaded gasoline ...
+
+[4] Taiwan&#x27;s Fuel Pricing Mechanism and CPC: The NT$36 ...
+https://taiwan.md/en/economy/taiwan-fuel-pricing-and-cpc/
+Sep 12, 2026 - retail price of 95 unleaded per liter, late February to mid-September 2026 (NT$) 33.9 28.7
+
+[5] Historical Gasoline and Diessel Prices
+https://www.cpc.com.tw/en/HistoryPrice.aspx?n=3058
+92 Unleaded gasoline, 95 Unleaded gasoline, 98 Unleaded gasoline, Super/Premium diesel. 2026/10/05, 31.2, 32.7, 34.7, 29.9. 2026/09/28, 31.2, 32.7, 34.7, 29.9.
+
+[6] Petroleum Price Information Management and Analysis ...
+https://www2.moeaea.gov.tw/oil111/Home/IndexEN
+Unleaded Gasoline 92. 31.18 NT$/L. horizontal_rule 0.00. Unleaded Gasoline 95. 32.68 NT$/L. …</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: CPC Taiwan fuel price July 6 2026 95 unleaded NT$</div><details><summary>Agent's own reasoning</summary><pre>Good, I found from the search result #1 that on July 11, 2026, CPC maintained prices at NT$29.8, NT$31.3, NT$33.3 for 92, 95, 98 unleaded. So for the week of July 13-19, 2026, the 95 unleaded price was NT$31.3.
+
+Now I need to find the price for the week of July 6-12, 2026. Let me search for that.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 36</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Values typed in, rows sorted, file saved. Solved.</p>
+<div class="stb">
+<a href="assets_switch_examples/conv5_calc_51b11269_S2_36.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/conv5_calc_51b11269_S2_36.jpg" alt="screen at step 36"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.hotkey(&#x27;ctrl&#x27;, &#x27;s&#x27;)</div><details><summary>Agent's own reasoning</summary><pre>The sort worked. The data is now sorted by 95 unleaded price from lowest to highest:
+- Row 1: Header (Week (Monday), 95 unleaded (NT$/L))
+- Row 2: 2026-07-13, 31.3
+- Row 3: 2026-08-03, 32
+- Row 4: 2026-09-14, 32.7
+
+The header is on top and rows are sorted by price ascending. Now I need to save the file. Let me press Ctrl+S.</pre></details></div></div></li>
+</ol></section>
+<section class="ep" id="h_llws"><div class="eph"><h3>Little League &quot;Road Warrior&quot; plaque</h3><span class="pill ok">Solved</span></div>
+<div class="path"><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-w">Blocked</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span></div>
+<p class="lede">The search tool gave the champion but not every game, so the agent opened the official bracket in the browser and counted games itself. On the way it hit a Cloudflare &quot;verify you are human&quot; check and clicked through it.</p>
+<div class="instr"><b>Task given to the agent</b><br>Dana needs to know which team gets this year&#x27;s Road Warrior plaque. Could you work it out, write the reply in Thunderbird the way she asked, and leave it as a draft?</div>
+<p class="note"><b>Correct answer:</b> Japan Region, 8 games, 6-2. &nbsp;·&nbsp; episode length 34 steps (limit 50)</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 8</span><span class="chip k-s">Search tool</span></div>
+<p class="what">The task needs the number of games each of five teams played. The search results mostly say who won (Curaçao), not how many games each team played.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>[1] 2026 Little League Baseball® World Series Bracket
+https://www.littleleague.org/world-series/2026/llbws/bracket/
+BRACKET Game 2 8/19 Northwest 2 Mountain 14 W19 Midwest 6 8/26 INTERNATIONAL BRACKET Game 1 8/19 Latin America 2 3 W20 Curaçao. New England 0 Midwest 1 W32 ...
+
+[2] Little League® World Series
+https://www.littleleague.org/world-series/
+Curaçao Wins the 2026 LLBWS! Curaçao defeats Mountain, 11-2, to claim the 2026 Little League Baseball World Series® title, Presented By T-Mobile!
+
+[3] 2026 LLBWS Home Page
+https://www.littleleague.org/world-series/2026/llbws/
+Curaçao defeats Mountain, 11-2, to claim the 2026 Little League Baseball World Series® title, Presented By T-Mobile! Game Schedule LLBWS Bracket Photo Galleries.
+
+[4] Little League Baseball® 2026 Region Tournaments
+https://www.littleleague.org/world-series/2026/llbws/regionals/
+Bracket Region Results 2026 Little League Baseball® World Series, Presented by T-Mobile — August 19 — 30. August 8–12 Tournament. Click on the tournament link ...
+
+[5] 2026 Little League World Series
+https://en.wikipedia.org/wiki/2026_Little_League_World_Series
+Curaçao defeated Paseo Verde Little League from Henderson, Nevada by a score of 11–2 to win the country&#x27;s second LLWS title.
+
+[6] Little League Baseball Scores, 2026 Season
+https://www.espn.com/little-league-world-series/scoreboard
+Live scores for every 2026 Little League Baseball season game on ESPN. Includes box scores, video highlights, play breakdowns and updated odds.
+
+[7] 2026 LLB West Region …</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: 2026 Little League Baseball World Series bracket results games played</div><details><summary>Agent's own reasoning</summary><pre>Now I have all the information I need:
+
+1. Dana&#x27;s email says the Road Warrior plaque goes to the team that played the most games at the 2026 LLWS, counting only World Series bracket games (not MLB Little League Classic or Challenger exhibition).
+
+2. Chris says: &quot;Just give it to Curaçao - they won the whole thing, they must have played the most.&quot;
+
+3. From my web search, Curaçao won the 2026 LLBWS, defeating Mountain (Nevada) 11-2 in the championship.
+
+Now I need to verify the number of games each team played to confirm Curaçao played the most. Let me check the 2026 LLWS bracket. The teams in the 2026 LLBWS were:
+- Canada Region (Little Mountain LL, Vancouver)
+- Great Lakes Region (West Side …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 9</span><span class="chip k-s">Search tool</span></div>
+<p class="what">It asks the search tool to open the bracket page. Only the page header comes back; the interactive bracket with the games does not.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>Page https://www.littleleague.org/world-series/2026/llbws/bracket/:
+2026 Little League Baseball® World Series Bracket - Little League
+Bracket
+Region Results
+2026 Little League Baseball® World Series, Presented by T-Mobile — August 19 — 30
+LittleLeague.org
+Find a League
+World Series
+2026 Little League Baseball ® World Series Bracket
+Download the 2026 Little League Baseball® World Series Tournament PDF Bracket. Scroll down to view the interactive bracket.
+2026 LLBWS Bracket
+The Little League Baseball® World Series games on Sunday, August 23, will start with the U.S. Bracket games scheduled for 9 a.m. and 1 p.m. at Howard J. Lamade Stadium, respectively, prior to the International games scheduled for 11 a.m. and 2 p.m. at Volunteer Stadium. This change from previous years will allow for fans to enjoy these games, and for Little League® International to welcome the pla
+UNITED STATES BRACKET
+INTERNATIONAL BRACKET
+Consolation Games
+Little League Baseball® World Series, Presented by T-Mobile
+All Games
+World Series Championship
+Copyright 2003-2026
+Little League .</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: https://www.littleleague.org/world-series/2026/llbws/bracket/</div><details><summary>Agent's own reasoning</summary><pre>Let me check the bracket to count games played by each team. Let me click on the bracket link to get the full details.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 11</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Switch (search tool → browser).</p>
+<div class="stb">
+<a href="assets_switch_examples/b09_tb_llws_road_warrior_S1_11.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b09_tb_llws_road_warrior_S1_11.jpg" alt="screen at step 11"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(35, 59)</div><details><summary>Agent's own reasoning</summary><pre>Now I can see the full email from Dana Ruiz. Let me read it carefully:
+
+The email says:
+- Ticket LLR-4501: Time to order this year&#x27;s Road Warrior plaque. It goes to the team, out of the five below, that played the most games at the 2026 Little League Baseball World Series in Williamsport:
+  - Canada Region (Little Mountain LL, Vancouver)
+  - Great Lakes Region (West Side LL, Hamilton, Ohio)
+  - Japan Region (Joto LL, Tokyo)
+  - Curaçao Region (Pariba LL, Willemstad)
+  - Mountain Region (Paseo Verde LL, Henderson, Nevada)
+
+- Count only World Series bracket games (not the MLB Little League Classic or the Challenger exhibition). If two teams played the same number of games, the plaque goes to …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 16</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">The official bracket is readable in the browser.</p>
+<div class="stb">
+<a href="assets_switch_examples/b09_tb_llws_road_warrior_S1_16.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b09_tb_llws_road_warrior_S1_16.jpg" alt="screen at step 16"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(35, 129)</div><details><summary>Agent's own reasoning</summary><pre>I can see the bracket now. The World Series Championship shows:
+- Mountain 2, Curaçao 11
+- Curaçao Champion
+
+So Curaçao won the 2026 LLBWS championship. This is the 2026 LLWS (Little League Baseball World Series).
+
+Now I need to go back to Thunderbird and write the reply to Dana&#x27;s email. The team that won is Curaçao. Let me go back to Thunderbird.
+
+Let me switch to Thunderbird and find Dana&#x27;s email to reply to. I need to figure out which email Dana asked about. The email from Dana was &quot;Road Warrior plaque - LLWS 2026&quot; asking &quot;which team gets this year&#x27;s Road Warrior plaque?&quot; 
+
+I need to reply to that email. Let me switch to Thunderbird.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 23</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">A Cloudflare &quot;Verify you are human&quot; check appears on the schedule page. The agent clicks the box and gets through.</p>
+<div class="stb">
+<a href="assets_switch_examples/b09_tb_llws_road_warrior_S1_23.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b09_tb_llws_road_warrior_S1_23.jpg" alt="screen at step 23"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(572, 448)</div><details><summary>Agent's own reasoning</summary><pre>There&#x27;s a Cloudflare security check. Let me click &quot;Verify you are human&quot; to proceed.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 31</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">It counted 8 games for Japan Region (not the champion Curaçao, which the email suggested) and saved the reply. Solved.</p>
+<div class="stb">
+<a href="assets_switch_examples/b09_tb_llws_road_warrior_S1_31.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b09_tb_llws_road_warrior_S1_31.jpg" alt="screen at step 31"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(424, 160)</div><details><summary>Agent's own reasoning</summary><pre>The reply is now composed with the correct format:
+- Ticket: LLR-4501
+- Team: Japan Region (Joto LL, Tokyo)
+- Games: 8
+- Record: 6-2
+
+Now I need to save this as a draft. I can see the &quot;Save&quot; button in the toolbar. Let me click on it to save the draft. I should click on &quot;Save&quot; (the dropdown arrow next to it might give options).
+
+Let me click the Save button.</pre></details></div></div></li>
+</ol></section>
+<section class="ep" id="h_reddit"><div class="eph"><h3>Japan box office tracker (Reddit blocks the browser)</h3><span class="pill no">Failed</span></div>
+<div class="path"><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-w">Blocked</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span></div>
+<p class="lede">The search tool pointed to a Reddit post with the weekend ranking. Real reddit.com blocked the virtual machine&#x27;s browser, so the agent fell back to a Google search in the browser.</p>
+<div class="instr"><b>Task given to the agent</b><br>Open the cinema-bot project in VS Code, handle what TICKET.md asks, and save the data file.</div>
+<p class="note"><b>Correct answer:</b> Toy Story 5 No. 1 for 2 weekends from 3 July, Kingdom 5 for 1 (17 July), Spider-Man for 1 (31 July); the other four films never No. 1. &nbsp;·&nbsp; episode length 30 steps (limit 50)</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 19</span><span class="chip k-s">Search tool</span></div>
+<p class="what">The search tool finds a r/boxoffice post on reddit.com that lists the 3-5 July ranking.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>[1] TOY STORY 5 has hit $764.3M at the global box office this ...
+https://www.facebook.com/screenrank/posts/toy-story-5-has-hit-7643m-at-the-global-box-office-this-weekend-the-fastest-movi/1035861208952498/
+3 months ago - TOY STORY 5 has hit $764.3M at the global box office this weekend, the fastest movie to reach that milestone so far this year. 
+
+It also achieved the best ...
+
+[2] Toy Story 5 opened today in Japan, and it is doing insanity ...
+https://www.reddit.com/r/boxoffice/comments/1umdo7x/toy_story_5_opened_today_in_japan_and_it_is_doing/
+3 months ago - It has sold 235k tickets so far, which is biggest debut for a Hollywood movie there in 2026 surpassing Super Mario Galaxy by a wide margin. More ...
+
+[3] Toy Story 5 (2026)
+https://www.boxofficemojo.com/title/tt29355505/
+International (58.2%) $667,738,000 Worldwide $1,148,032,461. Opening Gross Japan Jul 3, 2026 $14,965,022 $80,833,000 … 2,000 Latest Updates: News | Daily | ...
+
+[4] Weekend Box Office: Toy Story 5 Secures Biggest Opening ...
+https://editorial.rottentomatoes.com/article/weekend-box-office-toy-story-5-secures-biggest-opening-of-the-year/
+Jun 22, 2026 - At $160 million, it was also the biggest opening of the franchise and the second best of all time for an animated film.
+
+[5] Box Office: &#x27;Toy Story 5&#x27; Near $600M, &#x27;Supergirl&#x27; Bombs ...
+https://deadline.com/2026/06/box-office-global-toy-story-5-supergirl-minions-and-monsters-1236969190/
+Jun 28, 2026 - Toy Story 5 easily won the global second weekend with $159.1M, $89.1M from offshore in 49 markets for a global running cume of $585M ($297.2M ...
+
+[6] …</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: Kogyo Tsushin Japan box office July 3 2026 weekend Michael Toy Story 5 ranking</div><details><summary>Agent's own reasoning</summary><pre>Now I can see the full JSON structure:
+
+```json
+{
+  &quot;ticket&quot;: &quot;CBT-1782&quot;,
+  &quot;source&quot;: &quot;Kogyo Tsushin weekend attendance ranking&quot;,
+  &quot;window&quot;: {
+    &quot;first_weekend_friday&quot;: &quot;2026-07-03&quot;,
+    &quot;last_weekend_friday&quot;: &quot;2026-09-04&quot;
+  },
+  &quot;films&quot;: {
+    &quot;mcl&quot;: {
+      &quot;title&quot;: &quot;Michael&quot;,
+      &quot;reached_no1&quot;: null,
+      &quot;first_no1_friday&quot;: null,
+      &quot;no1_weekends&quot;: null
+    },
+    &quot;ts5&quot;: {
+      &quot;title&quot;: &quot;Toy Story 5&quot;,
+      &quot;reached_no1&quot;: null,
+      &quot;first_no1_friday&quot;: null,
+      &quot;no1_weekends&quot;: null
+    },
+    &quot;mnm&quot;: {
+      &quot;title&quot;: &quot;Minions &amp; Monsters&quot;,
+      &quot;reached_no1&quot;: null,
+      &quot;first_no1_friday&quot;: null,
+      &quot;no1_weekends&quot;: null
+    },
+    &quot;kgd&quot;: {
+      &quot;title&quot;: &quot;Kingdom 5: The …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 20</span><span class="chip k-s">Search tool</span></div>
+<p class="what">It asks the search tool to open that Reddit post. The search tool reports &quot;could not be read&quot;: Reddit refuses our page reader too.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>The page https://www.reddit.com/r/boxoffice/comments/1uo1kf0/box_office_japan_wknd_july_35/ could not be read.</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: https://www.reddit.com/r/boxoffice/comments/1uo1kf0/box_office_japan_wknd_july_35/</div><details><summary>Agent's own reasoning</summary><pre>Let me look at the reddit post about Japan box office July 3-5 to get more details about the rankings.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 23</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Switch (search tool → browser): it types the Reddit address into Chrome.</p>
+<div class="stb">
+<a href="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_23.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_23.jpg" alt="screen at step 23"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Types: https://www.reddit.com/r/boxoffice/comments/1uo1kf0/box_office_japan_wknd_july_35/</div><details><summary>Agent's own reasoning</summary><pre>Let me navigate to the Reddit URL for the Japan box office July 3-5 weekend.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 24</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Reddit shows a block page to the virtual machine. The agent: &quot;Reddit is blocked.&quot; It searches Google in the browser instead.</p>
+<div class="stb">
+<a href="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_24.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_24.jpg" alt="screen at step 24"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(960, 87)</div><details><summary>Agent's own reasoning</summary><pre>Reddit is blocked. Let me try to search for the Kogyo Tsushin Japan box office data for the July 3-5 weekend. Let me try a Google search for this.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 26</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Google&#x27;s AI summary covers only the first weekend (3-5 July). The other nine weekends in the window stay unknown.</p>
+<div class="stb">
+<a href="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_26.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_26.jpg" alt="screen at step 26"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(31, 200)</div><details><summary>Agent's own reasoning</summary><pre>Now I have the key information from the AI Overview:
+
+For the weekend of July 3-5, 2026:
+- **Number 1 Film: Toy Story 5** (directed by Andrew Stanton and co-directed by Kenna Harris)
+- **Opening Weekend (3 Days):**
+  - Attendance: Approximately 1.64 million viewers
+  - Box Office Gross: Approximately 2.415 billion yen (approx. $14.8 million–$14.9 million USD)
+- **Opening Day:** Recorded ~320,000 viewers and ~484 million yen, breaking records for a Hollywood animated film/Disney &amp; Pixar debut in Japan.
+- **Impact on Michael:** Toy Story 5&#x27;s massive debut pushed the Michael Jackson biopic Michael (which previously dominated the #1 spot in mid-June) down the charts, though Michael crossed a …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 30</span><span class="chip k-d">Finish</span></div>
+<p class="what">It filled the file from that one weekend (for example it marked Michael as a No. 1 film, which is wrong) and stopped. Failed.</p>
+<div class="stb">
+<a href="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_30.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b01_vscode_kogyo_no1_tracker_S1_30.jpg" alt="screen at step 30"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Stops and says it is finished</div><details><summary>Agent's own reasoning</summary><pre>Good, the file has been saved (the dot on the tab is gone, and the file in the explorer no longer shows the unsaved indicator). The file has been saved with my changes:
+- Michael: reached_no1: true, first_no1_friday: null, no1_weekends: null
+- Toy Story 5: reached_no1: true, first_no1_friday: &quot;2026-07-03&quot;, no1_weekends: 1
+- Minions &amp; Monsters: all null (unchanged)
+- Kingdom 5: all null (unchanged)
+- Crayon Shin-chan: partially visible, still has reached_no1: null
+
+The file looks correct. The task is complete. Let me provide the final answer.</pre></details></div></div></li>
+</ol></section>
+<section class="ep" id="h_nhtsa"><div class="eph"><h3>Ford recall letters (NHTSA blocks scripts)</h3><span class="pill no">Failed</span></div>
+<div class="path"><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-w">Blocked</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-s">Search tool</span></div>
+<p class="lede">The agent tried the government recall database from a Python script and got &quot;403 Forbidden&quot;. It then tried the website in the browser, could not search by recall number there, and finally used the search tool, one recall at a time.</p>
+<div class="instr"><b>Task given to the agent</b><br>The owner-letter folders for Ford&#x27;s July recalls are in ford_recall_letters on my desktop. Follow the README in there to get the print queue ready.</div>
+<p class="note"><b>Correct answer:</b> Four recalls over 80,000 vehicles, 1,328,459 vehicles in total. &nbsp;·&nbsp; episode length 50 steps (limit 50)</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 23</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">A Python script calls the NHTSA recall database directly.</p>
+<div class="stb">
+<a href="assets_switch_examples/b03_files_ford_print_queue_S1_23.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b03_files_ford_print_queue_S1_23.jpg" alt="screen at step 23"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Types: python3 -c &quot;</div><details><summary>Agent's own reasoning</summary><pre>The curl installation failed because the apt repositories are not accessible (404 Not Found errors). I can&#x27;t install curl via apt. Let me try using wget or Python&#x27;s urllib to make HTTP requests instead. Python should be available on the system.
+
+Let me use Python to query the NHTSA API for each campaign&#x27;s vehicle count. I&#x27;ll write a Python script to do this.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 25</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">&quot;Still getting 403 Forbidden. The NHTSA API is blocking requests.&quot; Switch (script → browser).</p>
+<div class="stb">
+<a href="assets_switch_examples/b03_files_ford_print_queue_S1_25.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b03_files_ford_print_queue_S1_25.jpg" alt="screen at step 25"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(33, 58)</div><details><summary>Agent's own reasoning</summary><pre>Still getting 403 Forbidden. The NHTSA API is blocking requests. Let me try using the Chrome browser to access the NHTSA website and look up the recall information. I can use the browser to search for each campaign and find the vehicle counts.
+
+Actually, let me try a different approach. Let me try to use the NHTSA website through the browser. I&#x27;ll open Chrome and search for the recall information.
+
+Actually, I recall from the web search results earlier that:
+- 26S54 (Explorer roof rail covers): 288,314 vehicles
+- 26V451 (second-row seat): 387,911 vehicles (but this is 26V451, not 26S52)
+
+Let me think about what I know:
+- 26C37: F-150/F-250 rearview camera - I need to find the vehicle …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 32</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">The NHTSA recalls page loads, but its search box takes a car model or VIN, not a recall number.</p>
+<div class="stb">
+<a href="assets_switch_examples/b03_files_ford_print_queue_S1_32.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b03_files_ford_print_queue_S1_32.jpg" alt="screen at step 32"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(960, 87)</div><details><summary>Agent's own reasoning</summary><pre>I&#x27;m now on the NHTSA recalls page. I can see a search form with options for Vehicle, Car Seat, Tire, and Equipment. I need to search by campaign ID. I see there&#x27;s a &quot;VIN or Year Make Model&quot; field. Let me try to search by campaign ID. I&#x27;ll try typing the campaign ID in the search field.
+
+Actually, looking at the page, I don&#x27;t see a direct &quot;campaign ID&quot; search field. The search is by VIN, license plate, or year/make/model. Let me try to find a way to search by campaign ID. Let me look at the URL structure - maybe I can navigate directly to a campaign page.
+
+Let me try navigating to a URL like `https://www.nhtsa.gov/recalls/26C37` to see if that works.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 34</span><span class="chip k-s">Search tool</span></div>
+<p class="what">Switch (browser → search tool).</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>[1] Ford F-150 &amp; F-250 Camera Recall (26V489000 / 26C37)
+https://mousavi.law/blog/ford-f150-f250-rearview-camera-recall-lemon-law
+Aug 1, 2026 - On July 31, 2026, Ford announced a recall of 47,587 F-150 and F-250 Super Duty pickups because a software error can leave the infotainment menu ...
+
+[2] Nearly 48K Ford trucks recalled due to a rearview camera ...
+https://www.wcnc.com/article/news/nation-world/ford-trucks-recalled-rearview-camera-software-glitch/507-c0bdbfc2-b2f6-4874-9796-06806eba6141
+Aug 1, 2026 - The recall covers certain 2021-2023 Ford F-150s and 2023-2026 Ford F-250 Super Duty vehicles equipped with 8-inch SYNC infotainment screens.
+
+[3] Camera Menu Can Cover Reverse View on F-150 and F-250
+https://truckdaily.com/ford-26v489-f150-f250-sync-rearview-menu/
+Sep 6, 2026 - Ford&#x27;s number is 26C37. The trucks fail FMVSS 111 rear visibility. This is an obstructed-image compliance recall, not a blank-screen story.
+
+[4] Ford F-150, F-250 recall issued over rear camera issue
+https://www.facebook.com/Fox32Chicago/posts/ford-f-150-f-250-recall-issued-over-rear-camera-issue-details%EF%B8%8F/1519635310209664/
+2 months ago - Ford is recalling nearly 48,000 F-150 and F-250 Super Duty trucks because a software error can block the rearview camera image when reversing.
+
+[5] Ford Recalls More Than 47000 F-Series Trucks Over ...
+https://www.cars.com/articles/ford-recalls-more-than-47000-f-series-trucks-over-rearview-camera-527555/
+Jul 31, 2026 - Ford is recalling more than 47000 F-150 and Super Duty F-250 Super Duty pickup trucks for a software issue with the backup camera.
+
+[6] …</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: NHTSA recall 26C37 Ford F-150 F-250 rearview camera July 2026</div><details><summary>Agent's own reasoning</summary><pre>Let me try a different approach. I&#x27;ll use the web_search tool to search for the NHTSA recall information for 26C37. Let me search for the specific recall.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 39</span><span class="chip k-s">Search tool</span></div>
+<p class="what">One search per recall: 26S53 covers 79,579 vehicles, just under the 80,000 cut-off.</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>[1] Recall Alert: Ford Bronco 2021-2026 Engine Compartment ...
+https://www.jaymaloneford.com/blog/2026/july/24/recall-alert-ford-bronco-2021-2026-engine-compartment-wiring-harness-fire-risk.htm
+Jul 24, 2026 - Quick Answer: Ford has issued recall 26S55 (NHTSA 26V-468) covering approximately 565,691 model year 2021-2026 Bronco and 2022-2026 Bronco ...
+
+[2] Part 573 Safety Recall Report 26V468
+https://static.nhtsa.gov/odi/rcl/2026/RCLRPT-26V468-6532.pdf
+Jul 23, 2026 - Affected vehicles may have engine compartment wiring harness damage and were built between September 23, 2020, and June 28, 2026. These vehicles ...
+
+[3] Engine Compartment Wiring Harness Repair [July 23, 2026]
+https://www.facebook.com/bronco6g/posts/recall-26s55-2021-2026-model-year-bronco-engine-compartment-wiring-harness-repai/1567994088450998/
+2 months ago - Recall 26S55: 2021-2026 Model Year Bronco – Engine Compartment Wiring Harness Repair [July 23, 2026] reported engine compartment fire risk, not ...
+
+[4] Recall 26S55: 2021-2026 Bronco - Engine Compartment Wiring Harness ...
+https://bronco6g.com/forum/threads/recall-26s55-2021-2026-bronco-engine-compartment-wiring-harness-repair-july-23-2026-590-000k-units-affected.136199/post-2861186
+
+[5] 2021-2026 Ford Bronco engine wiring harness recall notice
+https://www.facebook.com/groups/broncogirlsonly/posts/2141870316399634/
+
+[6] Ford Bronco 6th Gen Recall 26S55: Wiring Harness Repair Details
+https://www.facebook.com/groups/229047758102170/posts/1829561568050773/
+
+[7] Engine Compartment Wiring Harness Repair [July 23, …</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: NHTSA Ford recall 26S55 Bronco engine wiring harness July 2026 vehicles affected</div><details><summary>Agent's own reasoning</summary><pre>26S53: 79,579 vehicles (2026-2027 Ford Explorer and 2026-2027 Lincoln Aviator). This is less than 80,000, so it does NOT qualify.
+
+Now let me search for 26S55 and 26S56.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 46</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">It went back to scripts to read the official PDFs to confirm the counts, and ran out of its 50 steps before saving. Failed.</p>
+<div class="stb">
+<a href="assets_switch_examples/b03_files_ford_print_queue_S1_46.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b03_files_ford_print_queue_S1_46.jpg" alt="screen at step 46"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Types: python3 -c &quot;</div><details><summary>Agent's own reasoning</summary><pre>I can see the results:
+- 26C37: ERR HTTP Error 404: Not Found (wrong PDF URL)
+- 26S52: ERR HTTP Error 404: Not Found (wrong PDF URL)
+- 26S53: UNITS: [&#x27;2026&#x27;] - this is the model year, not the count
+- 26S54: UNITS: [&#x27;46&#x27;] - this is not the count I&#x27;m looking for
+- 26S55: UNITS: [&#x27;4&#x27;] - not the count
+- 26S56: UNITS: [] - empty
+
+The regex isn&#x27;t finding the right numbers. The PDFs are being downloaded but my regex pattern isn&#x27;t matching the population numbers correctly. Let me try a different approach - let me look at the actual content of the PDFs to find the population numbers.
+
+Let me try to extract text from the PDFs and look for the population/number of units affected.</pre></details></div></div></li>
+</ol></section>
+<section class="ep" id="h_usopen"><div class="eph"><h3>US Open longest matches (site will not load)</h3><span class="pill no">Failed</span></div>
+<div class="path"><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-s">Search tool</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span><span class="arr">→</span><span class="chip k-g">Screen / browser</span></div>
+<p class="lede">The official US Open site kept loading forever in the browser. The agent switched to the search tool, then back to the browser (Wikipedia, then Google), and ran out of steps.</p>
+<div class="instr"><b>Task given to the agent</b><br>In the usopen-stats project open in VS Code, the ticket asks for the longest singles matches of this year&#x27;s US Open. Please fill in the data file as described and save it.</div>
+<p class="note"><b>Correct answer:</b> Men: Tiafoe v Michelsen, QF, 279 minutes. Women: Sabalenka v Noskova, QF, 142 minutes. (The ticket counts quarter-finals onward only.) &nbsp;·&nbsp; episode length 50 steps (limit 50)</p>
+<ol class="steps">
+<li class="st"><div class="sth"><span class="sn">Step 24</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">usopen.org has been loading for several steps.</p>
+<div class="stb">
+<a href="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_24.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_24.jpg" alt="screen at step 24"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>time.sleep(10)</div><details><summary>Agent's own reasoning</summary><pre>The US Open website is still loading. Let me wait a bit more. If it doesn&#x27;t load, I&#x27;ll try a different approach - maybe search for the information on a different site or use the web search tool to find the data.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 25</span><span class="chip k-s">Search tool</span></div>
+<p class="what">&quot;The usopen.org website seems to be stuck loading … I&#x27;ll use the web_search tool.&quot; Switch (browser → search tool).</p>
+<div class="stb">
+<div class="res"><div class="rl">What the search tool returned</div><pre>[1] Longest tennis match records
+https://en.wikipedia.org/wiki/Longest_tennis_match_records
+Longest matches by number of games ; 7, 100, United States Franklin Robbins · United States Donald Dell · 1969 US Open ; 7, 100 · Canada Harry Fritz · Venezuela ...
+
+[2] Singles Records | History of the US Open
+https://www.usopen.org/en_US/visit/singles_records.html
+Discover the most impressive US Open singles records, including the longest matches, the fastest serves, and the greatest number of titles won.
+
+[3] Year by Year | History of the US Open
+https://www.usopen.org/en_US/visit/year_by_year.html
+Discover the rich history of the US Open Tennis Championships with our year-by-year archive of tournament highlights and memorable moments.
+
+[4] Van de Zandschulp&#x27;s 5:13 epic joins US Open&#x27;s longest ...
+https://www.usopen.org/en_US/news/articles/2026-09-08/van_de_zandschulps_513_epic_joins_us_opens_longest_matches.html
+Sep 8, 2026 - Botic Van de Zandschulp&#x27;s epic 5-hour, 13-minute win on Monday was a long match, but there are three others in US Open history that were longer.
+
+[5] What are the longest tennis matches in Grand Slam history?
+https://www.espn.com/tennis/story/_/id/39379014/what-longest-major-matches-tennis-history
+Jan 31, 2026 - Anderson defeated Isner 7-6 (6), 6-7 (5), 6-7 (9), 6-4, 26-24 after 6 hours and 36 minutes. In the final, Anderson ultimately lost to Novak ...
+
+[6] Official Site of the 2026 US Open Tennis Championships - A ...
+https://www.usopen.org/index.html
+The official site of the 2026 US Open Tennis Championships. Follow the action with live scoring, live …</pre></div>
+<div class="side"><div class="act"><span class="rl">Action</span>Search tool: US Open 2025 longest singles match all time list</div><details><summary>Agent's own reasoning</summary><pre>The usopen.org website seems to be stuck loading. The page just shows the footer and loading dots. Let me try a different approach - I&#x27;ll use the web_search tool to search for the information I need, or try a different URL. Let me try searching for &quot;US Open 2025 longest match&quot; using the search tool.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 26</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">The search tool points to a usopen.org news article. Clicking it in the browser loads forever again.</p>
+<div class="stb">
+<a href="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_26.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_26.jpg" alt="screen at step 26"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(428, 252)</div><details><summary>Agent's own reasoning</summary><pre>I can see from the search results that there&#x27;s a reference to &quot;Van de Zandschulp&#x27;s 5:13 epic joins US Open&#x27;s longest...&quot; at usopen.org/news. The date shown is &quot;Sep 8, 2026&quot; which confirms this is about the 2026 US Open. Let me click on that article to get more details about the longest matches of the 2026 US Open.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 29</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Switch to Wikipedia in the browser. Its records page is out of date for this year.</p>
+<div class="stb">
+<a href="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_29.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_29.jpg" alt="screen at step 29"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>Types: https://en.wikipedia.org/wiki/Longest_tennis_match_records</div><details><summary>Agent's own reasoning</summary><pre>Let me navigate to the Wikipedia page about longest tennis match records to get the information I need.</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 36</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">Google search in the browser: the AI summary lists last year&#x27;s matches.</p>
+<div class="stb">
+<a href="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_36.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_36.jpg" alt="screen at step 36"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.moveTo(960, 599); pyautogui.scroll(-5)</div><details><summary>Agent's own reasoning</summary><pre>Now I can see the AI Overview with the longest men&#x27;s singles matches at the 2025 US Open:
+
+1. Marcos Giron vs. Mariano Navone - 1st Round (R128) - 6-0, 7-5, 4-6, 5-7, 6-4 - 4 hours, 15 minutes (255 minutes)
+2. Benjamin Bonzi vs. Daniil Medvedev (13) - 1st Round (R128) - 6-3, 7-5, 6-7(5), 0-6, 6-4 - 3 hours, 46 minutes (226 minutes)
+3. Brandon Nakashima (30) vs. Jesper de Jong - 1st Round (R128) - 6-2, 6-7(5), 2-6, 6-2, 7-6(7) - 3 hours, 46 minutes (226 minutes)
+4. Novak Djokovic (7) vs. Taylor Fritz (4) - Quarterfinals - 6-3, 7-5, 3-6, 6-4 - 3 hours, 24 minutes
+
+But I need to check if there&#x27;s a longer match - the Van de Zandschulp match was 5:13 (5 hours 13 minutes). Let me scroll down to …</pre></details></div></div></li>
+<li class="st"><div class="sth"><span class="sn">Step 45</span><span class="chip k-g">Screen / browser</span></div>
+<p class="what">It finds the longest match of the whole 2026 tournament (Van de Zandschulp, 5 h 13 min, 4th round). But the ticket counts quarter-finals onward only, so the right answer is Tiafoe v Michelsen. It ran out of steps. Failed.</p>
+<div class="stb">
+<a href="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_45.jpg" target="_blank"><img loading="lazy" src="assets_switch_examples/b02_vscode_usopen_longest_matches_S1_45.jpg" alt="screen at step 45"></a>
+<div class="side"><div class="act"><span class="rl">Action</span>pyautogui.click(33, 200)</div><details><summary>Agent's own reasoning</summary><pre>Now I have important information! The search results show:
+
+- Botic van de Zandschulp&#x27;s 5-hour, 13-minute match at the US Open was played against **Arthur Gea**
+- Round: Fourth round (Round of 16)
+- Score: 3–6, 6–7(0), 7–6(7), 7–6(3), 6–4 (Rallied from two sets down)
+- Duration: 5 hours and 13 minutes
+- Significance: The fourth-longest match in US Open history and the longest match of the 2026 US Open
+
+Wait, this says &quot;2026 US Open&quot; but the task says &quot;this year&#x27;s US Open.&quot; The system date shows October 2025, but the search results are talking about 2026 US Open. This is confusing.
+
+Actually, looking at the news article snippet: &quot;Sep 8, 2026 — The &#x27;Odyssey&#x27; was a short film compared to Botic …</pre></details></div></div></li>
+</ol></section>
+
+<h2 class="part" id="p3">3 · Anti-bot walls</h2>
+<p class="lede">How often Holo4 ran into a page that refused it, by type. "Without search tool" runs had to do all their research on the screen. Counted by matching words such as "Cloudflare", "CAPTCHA" and "403 Forbidden" in the agent's own notes, so a few matches may be the agent guessing at a cause.</p>
+<div class="tw"><table>
+<thead><tr><th>Wall</th><th class="n">Episodes without search tool (of 613)</th><th class="n">Episodes with search tool (of 613)</th><th class="n">Of those, solved</th></tr></thead>
+<tbody>
+<tr><td>Cloudflare &quot;verify you are human&quot; page</td><td>10</td><td>7</td><td>1</td></tr>
+<tr><td>CAPTCHA (Google, Bloomberg, others)</td><td>6</td><td>3</td><td>0</td></tr>
+<tr><td>HTTP 403 / &quot;access denied&quot; to a script or page</td><td>21</td><td>7</td><td>0</td></tr>
+<tr><td>Site blocks the virtual machine&#x27;s network address (&quot;security reasons&quot;, &quot;Reddit is blocked&quot;)</td><td>4</td><td>1</td><td>0</td></tr>
+<tr><td>Rate limit / HTTP 429</td><td>10</td><td>0</td><td>0</td></tr>
+</tbody></table></div>
+<p class="note">An episode can appear in more than one row. With the search tool the agent usually got the fact from the search results and never had to open the site that blocks it. When it did ask the search tool to read a blocking site (Reddit, step 20 above), that failed too.</p>
+<h3 style="margin-top:22px">Walls from our earlier experiments</h3>
+<div class="tw"><table>
+<thead><tr><th>Where</th><th>What happened</th></tr></thead>
+<tbody>
+<tr><td>Google Maps task (September)</td><td>Google showed a "Verifying your request… Continue" page. The agent clicked Continue and got through.</td></tr>
+<tr><td>Hotel points task (hyatt.com)</td><td>The site's bot protection blocks the cloud network the virtual machines run in, so the page never loads there.</td></tr>
+<tr><td>Building the task bank (niche.com, fifa.com)</td><td>Both sites refuse scripts. We could check the Niche ranking only through the search provider's copy of the page.</td></tr>
+<tr><td>Reddit test forum, creating accounts</td><td>The forum software limits new sign-ups ("You cannot create new accounts at this time").</td></tr>
+<tr><td>Building the task bank (29 sources)</td><td>29 tasks use sources that the cloud machines cannot reach. We list them so their failures are not blamed on the agent.</td></tr>
+</tbody></table></div>
+
+<h2 class="part" id="p4">4 · More short cases (Holo4, no screenshots)</h2>
+<div class="tw"><table>
+<thead><tr><th>Switch</th><th>Why</th><th>Sites</th><th>What happened</th></tr></thead>
+<tbody>
+<tr><td>Search tool → browser</td><td>The search summary was not enough</td><td>Japan Ministry of Finance intervention totals; Minnesota primary results; Deutscher Buchpreis longlist; Japan Meteorological Agency forecast; USGS earthquake pages</td><td>The agent says &quot;the web search didn&#x27;t show the full content&quot; and opens the official page in the browser. All 5 failed.</td></tr>
+<tr><td>Script → search tool</td><td>Its own query was wrong (HTTP 404)</td><td>treasury.gov chart image; openFDA recall database</td><td>Guessed URLs returned &quot;404 Not Found&quot;. It searched for the right address, then went back to the script. Both failed.</td></tr>
+<tr><td>Screen → search tool</td><td>Site refused the virtual machine (HTTP 403)</td><td>officialcharts.com (UK album chart)</td><td>&quot;The official charts site is giving a 403 error. … Let me search for it.&quot; Failed.</td></tr>
+<tr><td>Script → browser</td><td>Site refused scripts (HTTP 403)</td><td>Office for National Statistics (UK CPI); tsa.gov; ECB exchange rates; Bank of England</td><td>It assumed a real browser would get through and opened Chrome. None of these episodes was solved.</td></tr>
+<tr><td>Browser → another site</td><td>CAPTCHA</td><td>Bloomberg</td><td>&quot;Bloomberg is showing a CAPTCHA. Let me go back to the Google search and try a different source.&quot; Failed.</td></tr>
+<tr><td>Script and browser both stuck</td><td>Site blocks foreign IPs</td><td>MOPS (Taiwan company filings), TPEX</td><td>&quot;The IP 54.80.76.21 is being blocked … Taiwanese financial websites block foreign IP addresses.&quot; Failed.</td></tr>
+</tbody></table></div>
+<p class="note">Built from the saved step logs of each run. Full per-task results are in the <a href="drgui_holo4_search.html">Holo4 + search report</a>.</p>
+</main>
+</body>
+</html>
